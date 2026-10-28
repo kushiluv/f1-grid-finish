@@ -19,3 +19,7 @@ This file is a summary of assistance, not the complete conversation history. Pre
 ## Interactive redesign · 28 October 2026
 
 The user requested implementation of `F1_Dashboard_Impact_Redesign_Brief.md` on the existing app. Codex implemented the context/estimate opening, chapter-specific layouts, staged circuit and outcome comparisons, a verified recovery-to-case link, lap checkpoints without future-result disclosure, a full-stage conclusion, updated presentation state and URLs, the revised script, and responsive/layout verification. The prepared data and canonical metric calculations were preserved. The starting-grid illustration was drawn as SVG in code.
+
+## Chart clarity refinement · 28 October 2026
+
+Codex reviewed the project rubric and existing slides, then refined chart contrast, shared heatmap colour encoding, aligned labels, recovery reference tracks and race checkpoint presentation. It retained the opening, four-chart structure, raw data, analytical calculations and scope rules. It used local Chrome screenshots and layout/interaction checks to correct spacing at presentation and mobile sizes. No generated raster imagery was added.

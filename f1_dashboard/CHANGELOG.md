@@ -1,3 +1,15 @@
+# Chart clarity refinement · 28 October 2026
+
+Refined the existing four-chart story in response to the request for more appealing, readable evidence. The opening and core narrative are retained.
+
+- Heatmap: stronger low-frequency contrast, finer cell boundaries, and one fixed 0–100% colour scale for both finish positions and the DNF/DSQ strip. The exact-match summary now includes a proportional bar and explicit finisher counts. Selected starting-place rates have small supporting bars.
+- Circuit comparison: aligned numeric columns, alternating row guides, clearer selected rows, darker uncertainty intervals and plain-language correlation endpoints. Full correlation and percentage scales are retained; capped lines identify intervals separately from the pale zero-to-estimate guides.
+- Recovery: stronger bars on 100% reference tracks, a selected-row highlight, and larger percentages with separately positioned counts. Positive rates below 1% remain at their true x positions; their selectable dots are explained in the caption. Missing groups do not receive a zero-length bar or a full track.
+- Race: distinguish unrevealed time, lightly identify the top-three zone, retain past checkpoints, and display each driver's current position and net change from their starting place. No future results are exposed during partial reveals.
+- Corrected projector-size text spacing and compact race-panel layout. Added browser checks for shared colour meaning, proportional counts, rare-value selection and annotation collisions.
+
+Rubric alignment: **simplicity** (same four analytical chapters), **integrity** (fixed scales, counts, exclusions and uncertainty), **salience** (stronger marks, direct labels and purposeful highlights). The data snapshot, numerical calculations and six-minute route are unchanged.
+
 # Interactive presentation redesign · 27 October 2026
 
 Implemented the requested visual/storytelling brief on the existing local application.

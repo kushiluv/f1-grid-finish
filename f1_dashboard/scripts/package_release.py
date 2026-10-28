@@ -27,7 +27,7 @@ report={
   'visual_review':'Desktop, projector, mobile and attributed chart-export images inspected; responsive sizing, labels and export background/attribution checked.',
   'launcher_verified':True,
   'production_javascript_sha256':hashlib.sha256((root/'dist'/next(a[2:] for a in assets if a.endswith('.js'))).read_bytes()).hexdigest(),
-  'revision':'interactive-story-redesign',
+  'revision':'chart-clarity-refinement',
   'scope':'Interactive opening, four analytical chapters with staged comparisons and race checkpoints, full-stage conclusion, Present/Explore modes, source/AI notes, records and exports. Historical association; no calibrated future-race forecast.',
 }
 (out/'release-validation.json').write_text(json.dumps(report,indent=2))

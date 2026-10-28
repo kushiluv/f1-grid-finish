@@ -93,3 +93,7 @@ See `CHANGELOG.md`, the sibling `f1_dashboard_plan/output/F1_Dashboard_Impact_Re
 - [FIA race account](https://www.fia.com/news/f1-vestappen-takes-stunning-sao-paulo-win-p17-grid-alpine-score-double-podium), case milestones.
 
 Independent educational project, unaffiliated with Formula 1. OpenAI Codex assisted with analysis, drafting, coding, design, and verification. Preserve complete AI conversation exports for the course submission. The team remains responsible for interpretation and presentation.
+
+## Chart readability update
+
+The current build retains the introduction and four-chapter route, with stronger chart contrast, aligned values and exact counts, a consistent heatmap colour scale, recovery reference tracks, and a clearer race timeline. See `CHANGELOG.md` for the design choices and their relationship to the presentation rubric. Open `Start Dashboard.command` to use the updated local build.

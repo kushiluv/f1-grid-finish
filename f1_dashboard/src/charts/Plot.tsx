@@ -21,11 +21,15 @@ export function useCompactChart(){
   useEffect(()=>{const media=matchMedia('(max-width:759px)');const update=()=>setCompact(media.matches);media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[]);
   return compact;
 }
-export const INK='#202A30', TEAL='#087F8C', AMBER='#C28B2E', PURPLE='#8874AA', MUTED='#7F8D91';
+export const INK='#202A30', TEAL='#087F8C', AMBER='#A46A18', PURPLE='#79609B', MUTED='#759398';
+export const GRID='#E7EDEB', LABEL='#50686E';
+// A fixed sequential scale across all cohorts: make small concentrations legible
+// while retaining a literal 0–100% legend and a distinct measured zero.
+export const SHARE_COLORS: [number,string][] = [[0,'#F1F5F4'],[.04,'#D6E7E3'],[.12,'#95C6C0'],[.25,'#4A9D9D'],[.5,'#14727E'],[1,'#073C48']];
 export const config: Partial<Config> = {responsive:true,displayModeBar:false,scrollZoom:false,displaylogo:false};
 export const baseLayout: Partial<Layout> = {
   autosize:true,paper_bgcolor:'transparent',plot_bgcolor:'transparent',
-  font:{family:'Arial, Helvetica, sans-serif',color:INK,size:14},
+  font:{family:'Arial, Helvetica, sans-serif',color:INK,size:15},
   margin:{l:70,r:35,t:45,b:45},
   hoverlabel:{bgcolor:INK,font:{color:'#fff',size:14},bordercolor:INK},
   showlegend:false,dragmode:false,

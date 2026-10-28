@@ -44,6 +44,14 @@ try{
   await page.getByRole('button',{name:'View the records',exact:true}).click();await expect(page.getByRole('dialog')).toContainText('134');await page.keyboard.press('Escape');
   await page.setViewportSize({width:1280,height:720});await fit('overview-selection',1280,720);await shot('overview-inspected-1280');await page.setViewportSize({width:1440,height:900});
  });
+ await check('heatmap colours have one meaning and the exact-match summary retains the finisher denominator',async()=>{
+  await load();
+  const d=await plot().evaluate(el=>el.data.slice(0,2).map(t=>({scale:t.colorscale,min:t.zmin,max:t.zmax})));
+  assert.deepEqual(d[0],d[1]);assert.equal(d[0].min,0);assert.equal(d[0].max,1);
+  await expect(page.locator('.position-contrast')).toContainText('713 same place');await expect(page.locator('.position-contrast')).toContainText('3,404 changed place');
+  const fraction=await page.locator('.position-share').evaluate(el=>el.firstElementChild.getBoundingClientRect().width/el.getBoundingClientRect().width);assert(Math.abs(fraction-713/4117)<.001);
+  await explore('overview','driver=max-verstappen&team=marussia');await expect(page.locator('.position-share')).toHaveCount(0);
+ });
  await check('the circuit reveal preserves scales, aligns rows and visibly highlights both measures',async()=>{
   await load('circuits-field');assert.equal(await plot().evaluate(el=>el.data.length),1);await expect(page.locator('.circuit-pair')).not.toContainText('wins from first');
   await page.locator('.circuit-pair button').nth(1).click();await page.getByRole('button',{name:'Show wins from first',exact:true}).click();
@@ -60,8 +68,27 @@ try{
  });
  await check('recovery value blocks do not collide at projector size and row pitch remains readable',async()=>{
   await page.setViewportSize({width:1280,height:720});await load('recovery-win');
-  const d=await plot().evaluate(el=>({pitch:el._fullLayout.yaxis._length/5.2,rects:[...el.querySelectorAll('.annotation')].filter(g=>g.textContent.includes('%')).map(g=>{const r=g.querySelector('.annotation-text').getBoundingClientRect();return {top:r.top,bottom:r.bottom};}).sort((a,b)=>a.top-b.top)}));
-  assert(d.pitch>=48,`row pitch ${d.pitch}`);assert.equal(d.rects.length,5);for(let i=1;i<d.rects.length;i++)assert(d.rects[i].top>=d.rects[i-1].bottom+2,'rate/count labels collide');
+  const d=await plot().evaluate(el=>({pitch:el._fullLayout.yaxis._length/5.2,rects:[...el.querySelectorAll('.annotation')].filter(g=>!g.textContent.includes('RESULTS / STARTS')).map(g=>{const r=g.querySelector('.annotation-text').getBoundingClientRect();return {top:r.top,bottom:r.bottom};}).sort((a,b)=>a.top-b.top)}));
+  assert(d.pitch>=48,`row pitch ${d.pitch}`);assert.equal(d.rects.length,10);for(let i=1;i<d.rects.length;i++)assert(d.rects[i].top>=d.rects[i-1].bottom+2,'rate/count labels collide');
+  await page.setViewportSize({width:1440,height:900});
+ });
+ await check('the rare-rate marker selects its own group without enlarging the data value',async()=>{
+  await load('recovery-win');
+  const d=await plot().evaluate(el=>({bar:el.data[0].x[4],dot:el.data[1].x[4],detail:el.data[1].customdata[4]}));
+  assert(Math.abs(d.bar-100/1185)<1e-12);assert.equal(d.dot,d.bar);assert.equal(d.detail[0],4);
+  await plot().evaluate(el=>el.emit('plotly_click',{points:[{curveNumber:1,x:el.data[1].x[4],y:4,customdata:el.data[1].customdata[4]}]}));
+  await expect(page.locator('.outcome-result')).toContainText('1 of 1,185');
+ });
+ await check('circuit values and headers stay inside the chart without overlapping at presentation and mobile sizes',async()=>{
+  for(const [w,h] of [[1920,1080],[1280,720],[390,844]]){
+   await page.setViewportSize({width:w,height:h});await load('circuits-both');
+   for(const metric of w===390?['The field','The winner']:['both']){
+    if(metric!=='both')await page.getByRole('button',{name:metric,exact:true}).click();
+    const rects=await plot().evaluate(el=>[...el.querySelectorAll('.annotation-text')].map(t=>{const r=t.getBoundingClientRect();const c=el.closest('.chart-card').getBoundingClientRect();return {text:t.textContent,left:r.left-c.left,right:r.right-c.left,top:r.top-c.top,bottom:r.bottom-c.top,width:c.width,height:c.height};}));
+    for(const r of rects)assert(r.left>=0&&r.right<=r.width&&r.top>=0&&r.bottom<=r.height,`clipped annotation at ${w}: ${JSON.stringify(r)}`);
+    for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){const a=rects[i],b=rects[j];assert(!(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom),`overlapping circuit values at ${w}: ${a.text}, ${b.text}`);}
+   }
+  }
   await page.setViewportSize({width:1440,height:900});
  });
  await check('race checkpoints contain only observed positions revealed so far and no future-result text',async()=>{
@@ -104,9 +131,10 @@ try{
   await page.getByRole('button',{name:'Sources & methods'}).click();await expect(page.getByRole('dialog')).toContainText('Pearson');await page.getByRole('tab',{name:'Data & sources'}).click();await expect(page.getByRole('dialog')).toContainText('AI acknowledgement');
   await page.getByRole('tab',{name:'Grid review'}).click();assert.equal(await page.locator('.modal tbody tr').count(),35);await page.keyboard.press('Escape');await expect(page.getByRole('dialog')).toHaveCount(0);
  });
- await check('CSV export preserves records and partial chart exports include checkpoint attribution',async()=>{
+ await check('CSV export preserves records and chart exports support circuit panels and race checkpoint attribution',async()=>{
   await load();await page.getByRole('button',{name:'Data',exact:true}).click();const csvPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download CSV'}).click();const csv=await csvPromise;await csv.saveAs(path.join(out,'visible-data.csv'));const txt=fs.readFileSync(path.join(out,'visible-data.csv'),'utf8');assert(txt.includes('data_source'));assert.equal(txt.split('\r\n').length,5089);await page.keyboard.press('Escape');
   await load('case-33');const pngPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const png=await pngPromise;assert(png.suggestedFilename().includes('lap-33'));await png.saveAs(path.join(out,'attributed-case-lap-33.png'));assert(fs.statSync(path.join(out,'attributed-case-lap-33.png')).size>10000);
+  await load('circuits-both');const circuitPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const circuit=await circuitPromise;await circuit.saveAs(path.join(out,'circuit-export.png'));assert(fs.statSync(path.join(out,'circuit-export.png')).size>10000);
  });
  await check('mobile opening, charts, selectors and closing have no horizontal overflow',async()=>{
   await page.setViewportSize({width:390,height:844});
@@ -121,6 +149,6 @@ try{
   await page.emulateMedia({reducedMotion:'no-preference'});
  });
  assert.deepEqual(errors,[],'Browser errors');assert.equal(external.length,0,'External runtime requests');
- fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:true,revision:'interactive-story-redesign',checks,browserErrors:errors,externalRuntimeRequests:external,viewports:[[1440,900],[1280,720],[390,844]],additionalViewport:[640,360],base},null,2));
+ fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:true,revision:'chart-clarity-refinement',checks,browserErrors:errors,externalRuntimeRequests:external,viewports:[[1440,900],[1280,720],[390,844]],additionalViewport:[640,360],base},null,2));
  console.log(`Verified ${checks.length} browser checks, no external runtime requests.`);
 }catch(error){await shot('failure');fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:false,checks,error:String(error),browserErrors:errors,externalRuntimeRequests:external},null,2));throw error;}finally{await browser.close();}
