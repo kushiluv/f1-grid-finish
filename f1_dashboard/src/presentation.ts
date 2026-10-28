@@ -1,7 +1,7 @@
 import type {AppState,Chapter} from './data/types';
 import {preset,stateUrl} from './state';
 
-export const STORY_STEPS=['intro','overview','circuits-field','circuits-both','recovery-top10','recovery-win','recovery-back','case-grid','case-11','case-33','case-43','case-69','closing'] as const;
+export const STORY_STEPS=['intro','overview','circuits-field','circuits-both','circuits-movement','recovery-top10','recovery-win','recovery-back','case-grid','case-11','case-33','case-43','case-69','closing'] as const;
 export type StoryStep=typeof STORY_STEPS[number];
 export const CHECKPOINTS=[0,11,33,43,69] as const;
 export const CHECKPOINT_NAMES=['Grid','Early recovery','Restart order','New leader','Finish'];
@@ -16,6 +16,7 @@ export function firstStep(chapter:Chapter):StoryStep {
 }
 export function stateForStep(step:StoryStep):AppState {
   const s=preset(chapterFor(step));
+  if(step==='circuits-movement')s.circuitMetric='movement';
   if(step==='recovery-win'||step==='recovery-back')s.outcome='win';
   if(step==='recovery-back')s.selectedBand=4;
   if(step.startsWith('case'))s.caseLap=step==='case-grid'?0:Number(step.slice(5));
@@ -51,7 +52,7 @@ export function readPresentationState(search:string):AppState {
   return state;
 }
 export const NEXT_LABEL:Record<StoryStep,string>={
-  intro:'Explore the pattern',overview:'Compare the circuits','circuits-field':'Show wins from first','circuits-both':'Change the question',
+  intro:'Explore the pattern',overview:'Compare the circuits','circuits-field':'Show wins from pole','circuits-both':'Compare positions gained','circuits-movement':'Explore recovery',
   'recovery-top10':'Change goal: win','recovery-win':'What about farther back?','recovery-back':'Follow that race',
   'case-grid':'Lap 11: early recovery','case-11':'Lap 33: restart order','case-33':'Lap 43: a new leader','case-43':'Reveal the finish','case-69':'The takeaway',closing:'Explore the evidence',
 };

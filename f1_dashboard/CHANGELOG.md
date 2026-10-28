@@ -1,3 +1,11 @@
+# Presentation context and top-ten movement · 28 October 2026
+
+- Simplified the opening title and definitions, emphasized pole position, removed extra headings and guess qualifiers, and made the 53.6% reveal explicit.
+- Centered the pattern heading; moved the diagonal guide below the heatmap; clarified the 17.3% exact-position statistic and its finisher denominator.
+- Explained whole-field correlation versus wins from pole. Added a selectable, shareable top-ten starter movement view with signed changes, absolute movement and finisher counts.
+- Renamed the recovery section and described each selected outcome in plain language. Added FIA-sourced penalty context without unsupported claims about most recoveries or car pace.
+- Updated the six-minute speaking route, per-speaker execution plan, methods and regression checks. Existing data snapshot and canonical metrics are preserved.
+
 # Chart clarity refinement · 28 October 2026
 
 Refined the existing four-chart story in response to the request for more appealing, readable evidence. The opening and core narrative are retained.

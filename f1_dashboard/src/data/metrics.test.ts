@@ -1,6 +1,6 @@
 import {describe,it,expect} from 'vitest';
 import {readFileSync} from 'node:fs';
-import {bandStats,circuitStats,gridStarts,heatmap,pearson,selectBase,summarize,percent} from './metrics';
+import {bandStats,circuitStats,gridStarts,heatmap,pearson,selectBase,summarize,percent,topTenMovement} from './metrics';
 import type {DriverRace} from './types';
 import {preset,readState,stateUrl} from '../state';
 const rows=JSON.parse(readFileSync(new URL('../../public/data/driver_race.json',import.meta.url),'utf8')) as DriverRace[];
@@ -63,5 +63,22 @@ describe('filter and URL state contracts',()=>{
   it('loads full presentation presets instead of hidden URL filters',()=>{
     const s=readState('?mode=present&chapter=overview&driver=max-verstappen&years=2023,2023',rows);
     expect(s.cohortDriverId).toBe('');expect(s.years).toEqual([2014,2025]);
+  });
+});
+
+ describe('top-ten starter movement',()=>{
+  it('matches independently tallied circuit samples, signs and totals',()=>{
+    const base=selectBase(rows,preset('overview'));
+    for(const [id,starts,n,total] of [['monaco',109,97,-9],['yas-marina',120,110,-73],['monza',120,108,-38],['spa-francorchamps',108,92,-55]] as const){
+      const m=topTenMovement(base.filter(r=>r.circuit_id===id));
+      expect(m.starts).toBe(starts);expect(m.n).toBe(n);expect(m.totalNet).toBe(total);expect(m.meanNet).toBeCloseTo(total/n,12);
+      expect(m.meanAbsolute!).toBeGreaterThan(Math.abs(m.meanNet!));
+    }
+  });
+  it('separates net from absolute change, and excludes nonfinishers and other starts',()=>{
+    const r=rows[0];const make=(grid:number|null,finish:number|null,is_finisher=true,is_starter=true)=>({...r,grid,finish,is_finisher,is_starter});
+    const m=topTenMovement([make(2,1),make(2,3),make(10,20,false),make(11,1),make(null,2),make(1,1,true,false)]);
+    expect(m).toEqual({starts:3,n:2,totalNet:0,meanNet:0,meanAbsolute:1});
+    expect(topTenMovement([]).meanNet).toBeNull();expect(topTenMovement([make(1,null,false)]).meanAbsolute).toBeNull();
   });
 });

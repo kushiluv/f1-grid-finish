@@ -4,13 +4,13 @@ BAIT 518 · Group 3 · Section BA2. Assign chapters across the actual group so t
 
 ## 0:00–0:35 · Make an estimate
 
-“Before a Formula 1 race, qualifying helps set the starting order, although penalties and rules can change it. That lineup is the grid. P1 starts first, at the front. A finishing position is the official result after the race; a smaller number is better.
+“Before a Formula 1 race, qualifying helps set the starting order, although penalties and rules can change it. That lineup is the grid. Pole position here means the actual front starting slot, P1. A finishing position is the official result after the race; a smaller number is better.
 
-How often do you think the first starter wins—about 25, 50, or 75 percent?”
+How often do you think the driver wins from pole position—25, 50, or 75 percent?”
 
 **Action:** select an audience estimate, then **Reveal the history**.
 
-“In our included 2014–2025 races, it was 134 wins from 250 actual first-position starts: 53.6%. A useful head start, but hardly a guarantee. What about the whole field?”
+“In our included 2014–2025 races, it was 134 wins from 250 actual pole-position starts: 53.6%. A useful head start, but hardly a guarantee. What about the whole field?”
 
 **Action:** **Explore the pattern**.
 
@@ -24,21 +24,23 @@ Only 17.3% kept exactly their starting position. Those facts fit together: relat
 
 **Action:** select **P10 · middle** to demonstrate one column. Do not open the records during the main presentation. **Compare the circuits**.
 
-## 1:40–2:50 · Two questions
+## 1:40–2:50 · The circuit: order, winner, movement
 
-“A circuit is the track where the race takes place. First, how closely did the finishing order follow the grid? Monaco's correlation is about 0.86; Yas Marina's is about 0.79.
+“A circuit is the race track. A correlation closer to one means the finishing order more closely follows the grid. Monaco is about 0.86; Yas Marina is 0.79. Does that also tell us who wins from pole?”
 
-Does that also tell us who wins from first?”
+**Action:** **Show wins from pole**.
 
-**Action:** **Show wins from first**. The second panel appears without changing row order or scales.
+“Pole starters won six of ten times at Monaco, compared with eleven of twelve at Yas Marina. Following the whole field and identifying the winner are different questions. These are small samples.”
 
-“In this sample, the first starter won six out of ten times at Monaco and eleven out of twelve at Yas Marina. Describing the whole field and describing the winner are different questions.
+**Action:** **Compare positions gained**.
 
-These histories are small, and the uncertainty intervals overlap. We have not established an immutable circuit ranking or a causal effect of track design. The useful lesson for a race briefing is to name the question.”
+“Now look only at top-ten starters who finished. At Monaco the average net change is nearly zero; at Spa it is a loss of 0.60 places. Gains and losses can cancel: Monaco still has an average change of 1.31 places in either direction. This is not an overtake count.”
 
-**Action:** **Change the question**.
+**Action:** **Explore recovery**.
 
-## 2:50–4:00 · Change the goal
+Keep this section to about 145 spoken words. Do not read all four tracks aloud or open the strategy context during the main route. Pit stops, safety cars and strategy can affect order; these comparisons do not isolate track design or the cause of a position change.
+
+## 2:50–4:00 · Ability to recover
 
 “For someone starting 11th to 15th, what counts as a recovery? Top ten means a finish from first to tenth. In this group, 402 of 1,238 starts reached the top ten: about one-third.
 
@@ -52,13 +54,13 @@ What about starting even farther back?”
 
 **Action:** **What about farther back?** selects P16–22 and preserves Win.
 
-“One winner from 1,185 starts in that back group. This is a different group from 11th–15th. Our next race is that one winning record.”
+“One winner from 1,185 starts in that back group. A fast car can start back here after a penalty; starting position is not a complete measure of pace. Our next race is that one winning record.”
 
 **Action:** **Follow that race**.
 
 ## 4:00–5:30 · Follow the exception
 
-“This is São Paulo in 2024, deliberately selected as an exception. Verstappen starts 17th; Norris first; Ocon fourth. We will follow their actual lap-end positions.”
+“This is São Paulo in 2024, deliberately selected as an exception. Verstappen qualified 12th but a five-place power-unit penalty put him 17th. Norris starts first; Ocon fourth. We will follow their actual lap-end positions.”
 
 **Action:** **Lap 11: early recovery**.
 
@@ -98,3 +100,7 @@ Stop here. Explore, data records, and methodology remain available for questions
 - **Are these chances for the next race?** They are historical group frequencies. An individual forecast needs a validated model and other information.
 - **Why the back-group count?** The default 2014–2025 cohort contains 1,185 eligible numeric-grid starts from P16–22 and one winning record: Verstappen, São Paulo 2024, P17.
 - **Could this prove which circuit allows more overtaking?** No. Net position changes and circuit correlations do not isolate passing difficulty or track-design effects.
+
+- **Why not say “qualified on pole”?** The 53.6% is 134 wins from 250 actual P1 starts. Qualifying first, receiving a pole award and actually starting P1 are not always the same thing.
+- **Why can all the top-ten movement averages be negative?** We follow only P1–10 starters who finished. Some finish outside the top ten; no balancing requirement applies to that subset. Signed changes can cancel, so read the mean absolute movement alongside the mean net change.
+- **Do most back-row recoveries come from penalties?** This analysis does not establish that. São Paulo 2024 is one verified example: [FIA qualifying report](https://api.fia.com/news/f1-norris-claims-pole-dramatic-wet-qualifying-sao-paulo-verstappen-qualifies-12th), [FIA race report](https://api.fia.com/news/f1-vestappen-takes-stunning-sao-paulo-win-p17-grid-alpine-score-double-podium).

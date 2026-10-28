@@ -23,3 +23,7 @@ The user requested implementation of `F1_Dashboard_Impact_Redesign_Brief.md` on 
 ## Chart clarity refinement · 28 October 2026
 
 Codex reviewed the project rubric and existing slides, then refined chart contrast, shared heatmap colour encoding, aligned labels, recovery reference tracks and race checkpoint presentation. It retained the opening, four-chart structure, raw data, analytical calculations and scope rules. It used local Chrome screenshots and layout/interaction checks to correct spacing at presentation and mobile sizes. No generated raster imagery was added.
+
+## Presentation context revision · 28 October 2026
+
+Codex implemented the team's requested wording and layout changes and the P1–10 starter movement calculation. It checked signed circuit totals against independent raw-record counts, distinguished actual P1 starts from qualifying on pole, and added linked FIA reports for the São Paulo penalty example. It updated the speaking route, responsive checks and release build. No claim that most back-grid recoveries are penalty-driven was inferred from these data. No AI-generated photographs or decorative chart animations were added.

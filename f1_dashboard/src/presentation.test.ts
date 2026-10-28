@@ -39,3 +39,10 @@ describe('presentation routes and verified story bridge',()=>{
     expect(bandStats(selectBase(rows,filtered),'win')[4].k).toBe(0);
   });
 });
+
+it('restores movement from shared URLs and includes it in the speaking route',()=>{
+ const state=stateForStep('circuits-movement');expect(state.circuitMetric).toBe('movement');
+ expect(readPresentationState(storyUrl(state,'circuits-movement'))).toEqual(state);
+ expect(adjacentStep('circuits-both',1)).toBe('circuits-movement');expect(adjacentStep('circuits-movement',1)).toBe('recovery-top10');
+ state.mode='explore';expect(readState(storyUrl(state,'circuits-movement'),rows).circuitMetric).toBe('movement');
+});

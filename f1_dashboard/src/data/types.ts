@@ -12,7 +12,7 @@ export type DriverRace = {
   exclude_no_green_racing: boolean; net_positions_gained: number | null;
 };
 export type AppState = {
-  mode: 'present' | 'explore'; chapter: Chapter; years: [number,number];
+  mode: 'present' | 'explore'; circuitMetric:'order'|'movement'; chapter: Chapter; years: [number,number];
   circuitIds: string[]; outcome: Outcome; selectedStart: number | null;
   selectedBand: number; highlightedDriverId: string;
   cohortDriverId: string; cohortConstructorId: string;

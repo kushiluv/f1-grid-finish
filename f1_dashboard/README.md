@@ -19,13 +19,13 @@ The launcher opens a local browser URL, normally http://127.0.0.1:5180/. It bind
 
 ## The revised six-minute presentation
 
-The root page opens with a short explanation of qualifying, the starting grid, and the finishing position. Ask the audience to estimate how often the first starter wins, choose an estimate, and **Reveal the history**. **Skip to the evidence** is also available.
+The root page opens with a short explanation of qualifying, the starting grid, and the finishing position. Ask the audience to estimate how often the driver wins from pole position, choose an estimate, and **Reveal the history**. **Skip to the evidence** is also available.
 
 The four analytical chapters then tell a connected story:
 
 1. **The pattern:** a large start–finish heatmap, correlation, and visible starting-place shortcuts. A cell click explains its records inline; **View the records** opens the table separately.
-2. **The circuit:** begin with whole-field correlation, then **Show wins from first** to reveal the second aligned comparison. Highlight a circuit to select its row in both panels.
-3. **The goal:** change **Top ten → Win** with the same groups, denominator, and 0–100% scale. **What about farther back?** reveals the one win from 1,185 starts in P16–22. **Follow that race** opens its actual record's case study.
+2. **The circuit:** begin with whole-field correlation, then **Show wins from pole** to reveal the second aligned comparison. Highlight a circuit to select its row in both panels. Then **Compare positions gained** shows the signed mean change for P1–10 starters who finished, with absolute movement and sample counts in the side panel. **Explore recovery** continues the route.
+3. **Ability to recover:** change **Top ten → Win** with the same groups, denominator, and 0–100% scale. **What about farther back?** reveals the one win from 1,185 starts in P16–22. **Follow that race** opens its actual record's case study.
 4. **The race:** follow São Paulo 2024 at the grid, lap 11, restart order at lap 33, lap 43, and the finish. Future observations and result labels remain hidden until revealed. **Show full race**, the checkpoint buttons, and the scrubber provide direct access.
 
 The final screen connects the findings to a historical race preview: **A head start, not a verdict.**
@@ -53,6 +53,10 @@ Default checked reference values:
 - Actual P1 starts that won: 134 / 250 = 53.6%.
 - P11–15: 402 / 1,238 top-ten finishes; 2 / 1,238 wins.
 - P16–22: 1 / 1,185 wins, the Verstappen São Paulo 2024 P17 start.
+
+The new circuit movement view also uses finishers, restricted to P1–10 starts. Grid minus finish is signed; positive means gained, negative means lost. The selected mean absolute change shows movement that net averages can hide. These measures do not count overtakes.
+
+“Pole position” throughout the win comparison means the actual P1 starting slot, not the qualifying winner. The optional recovery context cites the FIA São Paulo qualifying/race accounts for one verified penalty example; it does not claim most back-grid recoveries are penalty-driven.
 
 Correlation uses finishers. Outcome rates include eligible starts that ended in retirement/disqualification. Pit-lane starts are separately inspectable. Historical group frequencies are not calibrated individual race forecasts or causal estimates.
 

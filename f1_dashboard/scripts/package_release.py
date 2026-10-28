@@ -9,7 +9,8 @@ browser=json.loads((out/'browser-validation.json').read_text())
 units=json.loads((out/'unit-test-results.json').read_text())
 data=json.loads((out/'data-validation.json').read_text())
 launcher=json.loads((out/'launcher-validation.json').read_text())
-assert browser['passed'] and units['success'] and data['passed'] and launcher['passed']
+movement=json.loads((out/'movement-production-validation.json').read_text())
+assert browser['passed'] and units['success'] and data['passed'] and launcher['passed'] and movement['passed']
 assert units['numPassedTests']>=14
 assert len(browser['checks'])>=16
 failure=out/'screenshots/failure.png'
@@ -22,12 +23,13 @@ report={
   'build':'TypeScript type check and Vite production build passed',
   'unit_tests_passed':units['numPassedTests'],
   'browser_checks_passed':len(browser['checks']),
+  'additional_production_checks_passed':len(movement['checks']),
   'verified_viewports':browser['viewports'],
   'external_runtime_requests':0,
   'visual_review':'Desktop, projector, mobile and attributed chart-export images inspected; responsive sizing, labels and export background/attribution checked.',
   'launcher_verified':True,
   'production_javascript_sha256':hashlib.sha256((root/'dist'/next(a[2:] for a in assets if a.endswith('.js'))).read_bytes()).hexdigest(),
-  'revision':'chart-clarity-refinement',
+  'revision':'presentation-context-and-top-ten-movement',
   'scope':'Interactive opening, four analytical chapters with staged comparisons and race checkpoints, full-stage conclusion, Present/Explore modes, source/AI notes, records and exports. Historical association; no calibrated future-race forecast.',
 }
 (out/'release-validation.json').write_text(json.dumps(report,indent=2))
@@ -43,7 +45,7 @@ plan_files=[
   'README.md','source/explore_f1.py','source/unpack_snapshot.py','research/grid_overrides.json',
   'data/raw/manifest.json','data/raw/f1db-v2025.24.0-csv.zip',
   'output/exploratory_driver_race.csv','output/exploratory_race_metrics.csv','output/exploratory_evidence.json',
-  'output/F1_Dashboard_Impact_Redesign_Brief.md','output/F1_Dashboard_Blueprint.md','output/F1_Dashboard_Blueprint.pdf','output/BUILD_BRIEF.md','output/STORY_SCRIPT.md','output/AI_USE_NOTES.md'
+  'output/F1_Dashboard_Impact_Redesign_Brief.md','output/F1_Dashboard_Blueprint.md','output/F1_Dashboard_Blueprint.pdf','output/BUILD_BRIEF.md','output/STORY_SCRIPT.md','output/PRESENTATION_EXECUTION_PLAN.md','output/AI_USE_NOTES.md'
 ]
 for rel in plan_files:
     assert (plan/rel).exists(),rel

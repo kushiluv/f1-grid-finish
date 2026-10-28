@@ -52,10 +52,19 @@ export function bandStats(rows:DriverRace[],outcome:Outcome) {
     return {...b,rows:rs,n:rs.length,k:wins,rate:rs.length?wins/rs.length:null,races:new Set(rs.map(r=>r.race_id)).size};
   });
 }
+export function topTenMovement(rows:DriverRace[]) {
+  const starts=gridStarts(rows).filter(r=>r.grid!<=10);
+  const finishers=starts.filter(r=>r.is_finisher&&r.finish!==null);
+  const changes=finishers.map(r=>r.grid!-r.finish!);
+  const totalNet=changes.reduce((a,b)=>a+b,0);
+  return {starts:starts.length,n:finishers.length,totalNet,
+    meanNet:changes.length?totalNet/changes.length:null,
+    meanAbsolute:changes.length?changes.reduce((a,b)=>a+Math.abs(b),0)/changes.length:null};
+}
 export function circuitStats(rows:DriverRace[]) {
   const map=new Map<string,DriverRace[]>();
   rows.forEach(r=>map.set(r.circuit_id,[...(map.get(r.circuit_id)||[]),r]));
-  return [...map].map(([id,rs])=>({id,name:rs[0].circuit_name,rows:rs,...summarize(rs)})).sort((a,b)=>(b.r??-2)-(a.r??-2));
+  return [...map].map(([id,rs])=>({id,name:rs[0].circuit_name,rows:rs,movement:topTenMovement(rs),...summarize(rs)})).sort((a,b)=>(b.r??-2)-(a.r??-2));
 }
 export function downloadCsv(rows:DriverRace[],filename='grid-finish-data.csv') {
   if(!rows.length)return;

@@ -2,12 +2,12 @@ import type {AppState, Chapter, DriverRace} from './data/types';
 export const CHAPTERS: {id:Chapter;name:string;label:string;time:string}[] = [
   {id:'overview',name:'The relationship',label:'Grid → finish',time:'0:35–1:40'},
   {id:'circuits',name:'The circuit',label:'Two kinds of predictability',time:'1:40–2:50'},
-  {id:'recovery',name:'The goal',label:'Recovery to what?',time:'2:50–4:00'},
+  {id:'recovery',name:'Ability to recover',label:'Reaching the top ten',time:'2:50–4:00'},
   {id:'case',name:'The exception',label:'São Paulo 2024',time:'4:00–5:30'},
 ];
 export const PRESENT_CIRCUITS=['monaco','yas-marina','monza','spa-francorchamps'];
 export function preset(chapter:Chapter,mode:'present'|'explore'='present'):AppState {
-  return {mode,chapter,years:[2014,2025],circuitIds:chapter==='circuits'?PRESENT_CIRCUITS:[],outcome:'top10',selectedStart:null,selectedBand:3,highlightedDriverId:'',cohortDriverId:'',cohortConstructorId:'',includeBelgium2021:false,caseLap:null,caseEvent:null,showGasly:false};
+  return {mode,chapter,circuitMetric:'order',years:[2014,2025],circuitIds:chapter==='circuits'?PRESENT_CIRCUITS:[],outcome:'top10',selectedStart:null,selectedBand:3,highlightedDriverId:'',cohortDriverId:'',cohortConstructorId:'',includeBelgium2021:false,caseLap:null,caseEvent:null,showGasly:false};
 }
 export function readState(search:string,rows:DriverRace[]):AppState {
   const p=new URLSearchParams(search),chapter=CHAPTERS.some(x=>x.id===p.get('chapter'))?p.get('chapter') as Chapter:'overview';
@@ -28,11 +28,13 @@ export function readState(search:string,rows:DriverRace[]):AppState {
   if(p.has('lap')){const n=Number(p.get('lap'));if(Number.isInteger(n)&&n>=0&&n<=69)s.caseLap=n;}
   if(p.has('event')){const n=Number(p.get('event'));if(Number.isInteger(n)&&n>=0&&n<=2)s.caseEvent=n;}
   s.showGasly=p.get('gasly')==='1';
+  s.circuitMetric=p.get('metric')==='movement'?'movement':'order';
   return s;
 }
 export function stateUrl(s:AppState) {
   const p=new URLSearchParams({chapter:s.chapter,mode:s.mode});
   if(s.mode==='explore'){
+    if(s.circuitMetric==='movement')p.set('metric','movement');
     p.set('years',s.years.join(','));p.set('circuits',s.circuitIds.join(','));p.set('outcome',s.outcome);
     if(s.cohortDriverId)p.set('driver',s.cohortDriverId);if(s.cohortConstructorId)p.set('team',s.cohortConstructorId);
     if(s.includeBelgium2021)p.set('belgium','1');

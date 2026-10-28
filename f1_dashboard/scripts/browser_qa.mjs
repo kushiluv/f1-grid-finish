@@ -22,7 +22,7 @@ async function fit(step,w,h){
  if(step.startsWith('case'))assert(d.plotHeight>=300,`${step} actual plotting height ${d.plotHeight} at ${w}`);
  if(d.matrix){assert(Math.abs(d.matrix.x/d.matrix.y-1)<.03,`non-square matrix ${JSON.stringify(d.matrix)}`);assert(d.matrix.y>=(w===1280?300:380),`matrix too small ${d.matrix.y}`);}
 }
-const steps=['intro','overview','circuits-field','circuits-both','recovery-top10','recovery-win','recovery-back','case-grid','case-11','case-33','case-43','case-69','closing'];
+const steps=['intro','overview','circuits-field','circuits-both','circuits-movement','recovery-top10','recovery-win','recovery-back','case-grid','case-11','case-33','case-43','case-69','closing'];
 try{
  await check('root opens the context and reveals the canonical historical first-start rate',async()=>{
   await page.goto(base);await ready();await expect(page.locator('.opening-stage')).toBeVisible();await expect(page.getByRole('button',{name:'Reveal the history'})).toBeDisabled();
@@ -53,11 +53,24 @@ try{
   await explore('overview','driver=max-verstappen&team=marussia');await expect(page.locator('.position-share')).toHaveCount(0);
  });
  await check('the circuit reveal preserves scales, aligns rows and visibly highlights both measures',async()=>{
-  await load('circuits-field');assert.equal(await plot().evaluate(el=>el.data.length),1);await expect(page.locator('.circuit-pair')).not.toContainText('wins from first');
-  await page.locator('.circuit-pair button').nth(1).click();await page.getByRole('button',{name:'Show wins from first',exact:true}).click();
+  await load('circuits-field');assert.equal(await plot().evaluate(el=>el.data.length),1);await expect(page.locator('.circuit-pair')).not.toContainText('wins from pole');
+  await page.locator('.circuit-pair button').nth(1).click();await page.getByRole('button',{name:'Show wins from pole',exact:true}).click();
   const d=await plot().evaluate(el=>({count:el.data.length,ys:el.data.map(t=>t.y),sizes:el.data.map(t=>t.marker.size),r:el.layout.xaxis.range,p:el.layout.xaxis2.range}));
   assert.equal(d.count,2);assert.deepEqual(d.ys[0],d.ys[1]);assert(d.sizes.every(s=>s[1]>s[0]));assert.equal(d.r[0],-1);assert.equal(d.r[1],1.13);assert.equal(d.p[1],1.16);
-  await expect(page.locator('.circuit-pair')).toContainText('11/12 wins from first');
+  await expect(page.locator('.circuit-pair')).toContainText('11/12 wins from pole');
+ });
+ await check('top-ten movement uses signed changes, supports selection and restores shared views',async()=>{
+  await load('circuits-both');await page.getByRole('button',{name:'Compare positions gained',exact:true}).click();
+  const d=await plot().evaluate(el=>({x:el.data[0].x,detail:el.data[0].customdata,range:el.layout.xaxis.range}));
+  const expected=[-9/97,-73/110,-38/108,-55/92];d.x.forEach((x,i)=>assert(Math.abs(x-expected[i])<1e-12));
+  assert.deepEqual(d.range,[-1,1]);assert.deepEqual(d.detail.map(r=>r[2]),[97,110,108,92]);
+  await expect(page.locator('.circuit-detail')).toContainText('1.31 places');
+  await plot().evaluate(el=>el.emit('plotly_click',{points:[{customdata:el.data[0].customdata[3]}]}));
+  await expect(page.locator('.circuit-detail')).toContainText('2.14 places');await expect(page.locator('.circuit-detail')).toContainText('92 finishers from 108');
+  await page.reload();await ready();assert(new URL(page.url()).searchParams.get('step')==='circuits-movement');
+  await page.getByRole('button',{name:'Explore recovery',exact:true}).click();await expect(page.locator('h1')).toHaveText('Ability to recover');
+  await page.getByRole('button',{name:'Why can a fast car start at the back?',exact:true}).click();await expect(page.getByRole('dialog')).toContainText('not evidence that most recoveries');await expect(page.getByRole('dialog').getByRole('link',{name:'FIA qualifying report'})).toHaveAttribute('href',/fia.com/);await page.keyboard.press('Escape');
+  await explore('circuits','metric=movement&circuits=monaco');await expect(page.getByRole('button',{name:'Positions gained · P1–10',exact:true})).toHaveAttribute('aria-pressed','true');await page.reload();await ready();assert.equal(await plot().evaluate(el=>el.data[0].x[0]),-9/97);
  });
  await check('the recovery reveal preserves the denominator and 0–100 scale, including rare positive rates',async()=>{
   await load('recovery-top10');await expect(page.locator('.outcome-result')).toContainText('402 of 1,238');await expect(page.locator('.outcome-result')).toContainText('32.5%');
@@ -117,7 +130,7 @@ try{
  });
  await check('filtered cohorts do not inherit default story claims or unsupported uncertainty',async()=>{
   await explore('recovery','years=2022,2023&outcome=win&band=4');await expect(page.locator('.bridge-note')).toHaveCount(0);await expect(page.locator('h1')).not.toContainText('One win');
-  await explore('circuits','years=2024,2024&circuits=monaco,yas-marina,monza,spa-francorchamps');await expect(page.locator('.chart-controls')).toContainText('point estimates only');assert((await plot().evaluate(el=>el.data[0].error_x.array)).every(n=>n===0));
+  await explore('circuits','years=2024,2024&circuits=monaco,yas-marina,monza,spa-francorchamps');await expect(page.locator('.chart-controls').last()).toContainText('point estimates only');assert((await plot().evaluate(el=>el.data[0].error_x.array)).every(n=>n===0));
   await page.getByRole('button',{name:'Present',exact:true}).click();await expect(page.locator('.scope-block')).toContainText('2014');assert.equal(await plot().evaluate(el=>el.data.length),1);
  });
  await check('empty cohorts display absence rather than false zero or a strong association claim',async()=>{
@@ -135,11 +148,16 @@ try{
   await load();await page.getByRole('button',{name:'Data',exact:true}).click();const csvPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download CSV'}).click();const csv=await csvPromise;await csv.saveAs(path.join(out,'visible-data.csv'));const txt=fs.readFileSync(path.join(out,'visible-data.csv'),'utf8');assert(txt.includes('data_source'));assert.equal(txt.split('\r\n').length,5089);await page.keyboard.press('Escape');
   await load('case-33');const pngPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const png=await pngPromise;assert(png.suggestedFilename().includes('lap-33'));await png.saveAs(path.join(out,'attributed-case-lap-33.png'));assert(fs.statSync(path.join(out,'attributed-case-lap-33.png')).size>10000);
   await load('circuits-both');const circuitPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const circuit=await circuitPromise;await circuit.saveAs(path.join(out,'circuit-export.png'));assert(fs.statSync(path.join(out,'circuit-export.png')).size>10000);
+  await load('circuits-movement');const movePromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const movement=await movePromise;await movement.saveAs(path.join(out,'movement-export.png'));assert(fs.statSync(path.join(out,'movement-export.png')).size>10000);
  });
  await check('mobile opening, charts, selectors and closing have no horizontal overflow',async()=>{
   await page.setViewportSize({width:390,height:844});
-  for(const step of ['intro','overview','circuits-both','recovery-win','case-33','closing']){
+  for(const step of ['intro','overview','circuits-both','circuits-movement','recovery-win','case-33','closing']){
    await load(step);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`mobile overflow ${step}`);await shot(`${step}-390`);
+   if(step==='circuits-movement'){
+    const ticks=await plot().evaluate(el=>[...el.querySelectorAll('.xtick text')].map(t=>({text:t.textContent,width:t.getBoundingClientRect().width,right:t.getBoundingClientRect().right})));
+    assert(ticks.some(t=>t.text.includes('+1')&&t.width>0&&t.right<=390),'positive movement axis label is missing or clipped');
+   }
    if(step==='circuits-both'){await page.getByRole('button',{name:'The field',exact:true}).click();await page.getByRole('button',{name:'The winner',exact:true}).click();}
   }
  });
@@ -149,6 +167,6 @@ try{
   await page.emulateMedia({reducedMotion:'no-preference'});
  });
  assert.deepEqual(errors,[],'Browser errors');assert.equal(external.length,0,'External runtime requests');
- fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:true,revision:'chart-clarity-refinement',checks,browserErrors:errors,externalRuntimeRequests:external,viewports:[[1440,900],[1280,720],[390,844]],additionalViewport:[640,360],base},null,2));
+ fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:true,revision:'presentation-context-and-top-ten-movement',checks,browserErrors:errors,externalRuntimeRequests:external,viewports:[[1440,900],[1280,720],[390,844]],additionalViewport:[640,360],base},null,2));
  console.log(`Verified ${checks.length} browser checks, no external runtime requests.`);
 }catch(error){await shot('failure');fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:false,checks,error:String(error),browserErrors:errors,externalRuntimeRequests:external},null,2));throw error;}finally{await browser.close();}
