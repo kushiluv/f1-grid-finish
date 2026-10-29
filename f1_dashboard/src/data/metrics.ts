@@ -8,6 +8,7 @@ export const BANDS = [
   {label:'16–22', min:16, max:22, title:'Starting at the back'},
 ];
 export const OUTCOMES: Record<Outcome,{label:string; n:number}> = {top10:{label:'Top ten',n:10},podium:{label:'Podium',n:3},win:{label:'Win',n:1}};
+export const circuitLabel = (id:string,name:string) => id==='interlagos'?'São Paulo':id==='spa-francorchamps'?'Spa':name;
 export const fmt = (n:number) => n.toLocaleString('en-US');
 export const percent = (n:number|null, digits=1) => n===null?'—':`${(n*100).toFixed(n>0&&n<.01?2:digits)}%`;
 export const decimal = (n:number|null,digits=2) => n===null?'—':n.toFixed(digits);
@@ -64,7 +65,7 @@ export function topTenMovement(rows:DriverRace[]) {
 export function circuitStats(rows:DriverRace[]) {
   const map=new Map<string,DriverRace[]>();
   rows.forEach(r=>map.set(r.circuit_id,[...(map.get(r.circuit_id)||[]),r]));
-  return [...map].map(([id,rs])=>({id,name:rs[0].circuit_name,rows:rs,movement:topTenMovement(rs),...summarize(rs)})).sort((a,b)=>(b.r??-2)-(a.r??-2));
+  return [...map].map(([id,rs])=>({id,name:circuitLabel(id,rs[0].circuit_name),rows:rs,movement:topTenMovement(rs),...summarize(rs)})).sort((a,b)=>(b.r??-2)-(a.r??-2));
 }
 export function downloadCsv(rows:DriverRace[],filename='grid-finish-data.csv') {
   if(!rows.length)return;
@@ -73,4 +74,13 @@ export function downloadCsv(rows:DriverRace[],filename='grid-finish-data.csv') {
   const sourceKeys=['data_source','source_version'];
   const csv=[[...keys,...sourceKeys].map(quote).join(','),...rows.map(r=>[...keys.map(k=>quote(r[k])),quote('F1DB https://github.com/f1db/f1db'),quote('v2025.24.0 + documented grid/status corrections')].join(','))].join('\r\n');
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+
+export function movementTail(rows:DriverRace[],threshold:number){
+ const rs=gridStarts(rows).filter(r=>r.grid!<=10&&r.is_finisher&&r.finish!==null);
+ const k=rs.filter(r=>Math.abs(r.grid!-r.finish!)>=threshold).length;
+ return {k,n:rs.length,rate:rs.length?k/rs.length:0};
+}
+export function wilson(k:number,n:number):[number,number]{
+ if(!n)return [0,1];const z=1.95996398454,p=k/n,d=1+z*z/n,c=(p+z*z/(2*n))/d,h=z*Math.sqrt(p*(1-p)/n+z*z/(4*n*n))/d;return [c-h,c+h];
 }

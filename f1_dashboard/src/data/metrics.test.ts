@@ -82,3 +82,24 @@ describe('filter and URL state contracts',()=>{
     expect(topTenMovement([]).meanNet).toBeNull();expect(topTenMovement([make(1,null,false)]).meanAbsolute).toBeNull();
   });
 });
+
+it('uses mean absolute changes rather than the absolute signed mean and includes São Paulo',()=>{
+ const all=selectBase(rows,preset('overview'));
+ const cs=circuitStats(all),monaco=cs.find(c=>c.id==='monaco')!,sao=cs.find(c=>c.id==='interlagos')!,hun=cs.find(c=>c.id==='hungaroring')!;
+ expect(monaco.movement.meanAbsolute).toBeCloseTo(127/97,12);expect(monaco.movement.meanAbsolute).not.toBeCloseTo(Math.abs(monaco.movement.meanNet!));
+ expect(sao.name).toBe('São Paulo');expect(sao.movement.meanAbsolute).toBeCloseTo(183/94,12);expect(sao.p1Wins).toBe(8);expect(sao.p1Starts).toBe(11);
+ expect(hun.movement.meanAbsolute).toBeCloseTo(255/107,12);
+ const eligible=cs.filter(c=>c.races>=8);expect(eligible).toHaveLength(19);expect(eligible.sort((a,b)=>a.movement.meanAbsolute!-b.movement.meanAbsolute!)[0].id).toBe('monaco');expect(eligible.at(-1)!.id).toBe('hungaroring');
+ expect(eligible.sort((a,b)=>a.r!-b.r!)[0].id).toBe('sochi');
+});
+
+// The closing comparison counts actual results, not rounded chart percentages.
+it('calculates movement tails on top-ten finishers and Wilson intervals on starts',async()=>{
+ const {movementTail,wilson}=await import('./metrics');
+ const monaco=rows.filter(r=>r.circuit_id==='monaco'&&!r.exclude_no_green_racing);
+ const hungary=rows.filter(r=>r.circuit_id==='hungaroring'&&!r.exclude_no_green_racing);
+ expect(movementTail(monaco,3)).toEqual({k:17,n:97,rate:17/97});
+ expect(movementTail(hungary,3)).toEqual({k:41,n:107,rate:41/107});
+ expect(movementTail(monaco,0).rate).toBe(1);
+ const interval=wilson(11,12);expect(interval[0]).toBeCloseTo(.64612,4);expect(interval[1]).toBeCloseTo(.98513,4);
+});

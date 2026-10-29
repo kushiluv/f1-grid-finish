@@ -33,7 +33,7 @@ for port in [args.port,*range(args.port+1,args.port+11)]:
 if server is None:
     raise SystemExit('No local port was available. Close another dashboard terminal and try again.')
 url=f'http://127.0.0.1:{server.server_port}/'
-print('\nGRID / FINISH — A head start, not a verdict',flush=True)
+print('\nGRID / FINISH — Starting position and race outcomes',flush=True)
 print('BAIT 518 · Group 3 · BA2\n',flush=True)
 print(f'Open the dashboard: {url}',flush=True)
 print('Keep this terminal open while presenting. Press Control+C to stop.\n',flush=True)

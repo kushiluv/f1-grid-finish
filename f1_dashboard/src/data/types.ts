@@ -30,7 +30,9 @@ export type RaceCase = {
   session: number; title: string; date: string; laps: number;
   traces: {driver_id:string;label:string;driver_number:number;grid:number;finish:number;points:{lap:number;position:number}[]}[];
   events: {lap:number;label:string;title:string;description:string;kind:string}[];
+  control_events: RaceControlEvent[];
   red_flag: {start_lap:number;end_lap:number;utc:string}; method:string;
   sources: {title:string;url:string}[];
 };
+export type RaceControlEvent={lap:number;kind:'wet'|'vsc'|'safety-car'|'red'|'restart'|'finish';label:string;title:string;description:string;source:string;utc?:string;message?:string;band_end_lap?:number};
 export type Bundle = {rows:DriverRace[]; evidence:any; uncertainty:Uncertainty; raceCase:RaceCase; provenance:any; audit:any[]};

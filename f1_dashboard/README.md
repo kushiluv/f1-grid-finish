@@ -23,12 +23,12 @@ The root page opens with a short explanation of qualifying, the starting grid, a
 
 The four analytical chapters then tell a connected story:
 
-1. **The pattern:** a large start–finish heatmap, correlation, and visible starting-place shortcuts. A cell click explains its records inline; **View the records** opens the table separately.
-2. **The circuit:** begin with whole-field correlation, then **Show wins from pole** to reveal the second aligned comparison. Highlight a circuit to select its row in both panels. Then **Compare positions gained** shows the signed mean change for P1–10 starters who finished, with absolute movement and sample counts in the side panel. **Explore recovery** continues the route.
-3. **Ability to recover:** change **Top ten → Win** with the same groups, denominator, and 0–100% scale. **What about farther back?** reveals the one win from 1,185 starts in P16–22. **Follow that race** opens its actual record's case study.
-4. **The race:** follow São Paulo 2024 at the grid, lap 11, restart order at lap 33, lap 43, and the finish. Future observations and result labels remain hidden until revealed. **Show full race**, the checkpoint buttons, and the scrubber provide direct access.
+1. **The pattern:** the start–finish heatmap, correlation and exact-match summary. Highlight gains, unchanged positions or losses without changing denominators. Click a starting place or cell to inspect it inline.
+2. **Ability to recover:** one combined dot plot with top-ten, podium and win rates on a single 0–100% axis. Marker shapes and small vertical offsets distinguish overlapping outcomes. In Present, Top ten draws on entry; **Reveal podium** and **Reveal wins** add the next series while keeping earlier series visible. Back hides the latest reveal. Click a revealed legend to replay its left-to-right draw. Explore shows all three from the start. P16–22 appears first; 167 top tens, 12 podiums and one win from 1,185 starts. Select a row or outcome to inspect the counts. The outcomes overlap and must not be added.
+3. **The circuit:** the preferred two aligned panels for whole-field correlation and wins from pole. Present starts with correlation only; **Reveal wins from pole** adds the second panel with a short animation. Explore shows both from the start. **Compare position change** adds the restored absolute-movement view, with a short left-to-right draw. **Order & pole wins** returns to the paired panels. Values are average absolute grid-to-finish differences among P1–10 starters who finished. The five contrasts are Monaco, Yas Marina, São Paulo, Sochi and Hungaroring. They include the smallest/largest movement averages and lowest correlation among the 19 circuits with at least eight races.
+4. **The race:** São Paulo 2024, with car markers at observed lap-end ranks. **Play race** advances the trace and briefly holds key checkpoints. Pause, 1×/2× speed, scrubbing, replay and manual checkpoints remain available. Future observations stay hidden until revealed. Amber safety-car/VSC bands, a red-flag band and a short race-control note appear as playback reaches each milestone. The five original race checkpoints are retained.
 
-The final screen connects the findings to a historical race preview: **A head start, not a verdict.**
+The final screen is a 45–60-second summary of the proposal’s practical applications: **team strategy, circuit planning and betting analysis**. It uses three fixed examples: recovery cells for P16–22, a Monaco–Hungaroring position-change ruler, and Monaco–Yas Marina pole-win samples. One short action accompanies each. There are no filters or sliders to operate. The F1 logo appears on the opening; artwork attribution is in `public/assets/SOURCES.md`.
 
 Use the footer action or left/right arrows outside controls to move through presentation steps. Back reverses the reveal sequence. A chapter tab starts that chapter's initial beat. All modes and partial presentation steps have reproducible URLs. **Replay introduction** is available from the analytical screens.
 
@@ -38,7 +38,7 @@ See `public/STORY_SCRIPT.md` or open **Speaker notes** for the six-minute route.
 
 **Explore** shows the full evidence and exposes year ranges, circuit selection, driver/team cohorts, and Belgium 2021 sensitivity. Driver highlighting is separate from filtering and leaves reference rates unchanged. Returning to **Present** loads the chosen chapter's fixed preset and resets Explore filters.
 
-The São Paulo case is explicitly pinned to that race, even when other chapter filters differ. Explore can add Gasly and inspect the full lap chart. A partial presentation PNG includes its checkpoint in the filename and attribution. **Show full race** before exporting if the complete case is wanted. The circuit's partial PNG is similarly labeled as the field-only comparison.
+The São Paulo case is explicitly pinned to that race, even when other chapter filters differ. Explore can add Gasly and inspect the full lap chart. A partial presentation PNG includes its checkpoint in the filename and attribution. **Show full race** before exporting if the complete case is wanted. Circuit exports retain both panels, their intervals and data attribution.
 
 **Data** opens the underlying driver–race records and CSV export. **Sources & methods** provides definitions, denominator rules, uncertainty, AI acknowledgment, and all 35 source-grid review decisions. Keyboard controls, text summaries, and the data table complement chart interaction. Reduced-motion settings preserve the same evidence without reveal animation.
 
@@ -52,11 +52,11 @@ Default checked reference values:
 - Pearson r = 0.7646446838008164; 713 / 4,117 finishers kept exactly their starting place.
 - Actual P1 starts that won: 134 / 250 = 53.6%.
 - P11–15: 402 / 1,238 top-ten finishes; 2 / 1,238 wins.
-- P16–22: 1 / 1,185 wins, the Verstappen São Paulo 2024 P17 start.
+- P16–22: 167 / 1,185 top-ten finishes, 12 podiums and one win: Verstappen’s São Paulo 2024 P17 start.
 
-The new circuit movement view also uses finishers, restricted to P1–10 starts. Grid minus finish is signed; positive means gained, negative means lost. The selected mean absolute change shows movement that net averages can hide. These measures do not count overtakes.
+The selected-circuit movement detail uses **mean(abs(grid − finish))**, restricted to P1–10 starters who finished. It counts gains and losses as positive distances before averaging: Monaco 1.31, Yas Marina 1.52, São Paulo 1.95, Sochi 2.16 and Hungaroring 2.38. It is not abs(mean(grid − finish)), a variance statistic or an overtake count.
 
-“Pole position” throughout the win comparison means the actual P1 starting slot, not the qualifying winner. The optional recovery context cites the FIA São Paulo qualifying/race accounts for one verified penalty example; it does not claim most back-grid recoveries are penalty-driven.
+“Pole position” throughout the win comparison means the actual P1 starting slot, not the qualifying winner. Sources & methods cites the FIA São Paulo qualifying/race accounts for one verified penalty example; the story does not claim most back-grid recoveries are penalty-driven. Additional plain-text context dialogs have been removed.
 
 Correlation uses finishers. Outcome rates include eligible starts that ended in retirement/disqualification. Pit-lane starts are separately inspectable. Historical group frequencies are not calibrated individual race forecasts or causal estimates.
 
@@ -84,6 +84,8 @@ F1_DASHBOARD_URL=http://127.0.0.1:5181/ node scripts/browser_qa.mjs
 ```
 
 The script uses installed Mac Chrome by default. Set `F1_CHROME_PATH` on another platform. It covers all presentation states, projector geometry, label collisions, future-data leakage, filtered cohorts, exports, mobile, and reduced-motion operation, while blocking external runtime requests.
+
+For a production smoke test, run the Python server on port 5182, then `python3 scripts/check_launcher.py` and `node scripts/production_qa.mjs`. The latter checks a complete race playback, local logo, revised controls and exports. `python3 scripts/package_release.py` creates the verified release archive.
 
 To regenerate data, run `npm run prepare:data`. The script reads the supplied sibling `f1_dashboard_plan/` source snapshot and automatically unpacks its raw CSV ZIP when needed. Prepared data and statistical definitions were preserved in the redesign.
 

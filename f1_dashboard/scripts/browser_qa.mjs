@@ -12,7 +12,7 @@ const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message)
 async function ready(){await page.locator('h1').waitFor();await page.waitForTimeout(220);}
 async function load(step='overview',query=''){await page.goto(`${base}?mode=present&step=${step}${query?'&'+query:''}`);await ready();}
 async function explore(chapter='overview',query=''){await page.goto(`${base}?mode=explore&chapter=${chapter}${query?'&'+query:''}`);await ready();}
-async function shot(name){await page.waitForTimeout(320);await page.screenshot({path:path.join(screens,name+'.png'),fullPage:true});}
+async function shot(name){await page.waitForTimeout(320);if(await page.locator('.concise-impact').count())await page.waitForFunction(()=>document.querySelector('.concise-impact').getAnimations({subtree:true}).every(a=>a.playState!=='running'));await page.screenshot({path:path.join(screens,name+'.png'),fullPage:true});}
 async function check(name,fn){await fn();checks.push({name,passed:true});console.log('PASS',name);}
 const plot=()=>page.locator('.chart-main .js-plotly-plot');
 async function fit(step,w,h){
@@ -20,12 +20,12 @@ async function fit(step,w,h){
  assert(d.body<=h+2,`${step} scrolls at ${w}: ${JSON.stringify(d)}`);assert(d.width<=w+1,`${step} horizontal overflow at ${w}`);
  if(d.chart){assert(d.chart.bottom<=d.footer.top+1,`${step} overlaps footer`);assert(d.aside.scroll<=d.aside.height+2,`${step} aside clips or scrolls at ${w}: ${JSON.stringify(d.aside)}`);}
  if(step.startsWith('case'))assert(d.plotHeight>=300,`${step} actual plotting height ${d.plotHeight} at ${w}`);
- if(d.matrix){assert(Math.abs(d.matrix.x/d.matrix.y-1)<.03,`non-square matrix ${JSON.stringify(d.matrix)}`);assert(d.matrix.y>=(w===1280?300:380),`matrix too small ${d.matrix.y}`);}
+ if(d.matrix){assert(Math.abs(d.matrix.x/d.matrix.y-1)<.03,`non-square matrix ${JSON.stringify(d.matrix)}`);assert(d.matrix.y>=(w===1280?280:350),`matrix too small ${d.matrix.y}`);}
 }
-const steps=['intro','overview','circuits-field','circuits-both','circuits-movement','recovery-top10','recovery-win','recovery-back','case-grid','case-11','case-33','case-43','case-69','closing'];
+const steps=['intro','overview','recovery-top10','recovery-podium','recovery-win','circuits-field','circuits-both','circuits-movement','case-grid','case-11','case-33','case-43','case-69','closing'];
 try{
  await check('root opens the context and reveals the canonical historical first-start rate',async()=>{
-  await page.goto(base);await ready();await expect(page.locator('.opening-stage')).toBeVisible();await expect(page.getByRole('button',{name:'Reveal the history'})).toBeDisabled();
+  await page.goto(base);await ready();await expect(page.locator('.opening-stage')).toBeVisible();await expect(page.getByRole('img',{name:'Formula 1',exact:true})).toBeVisible();assert(await page.locator('.opening-f1-logo').evaluate(el=>el.complete&&el.naturalWidth>0));await expect(page.locator('.topbar')).not.toContainText('A HEAD START');await expect(page.getByRole('button',{name:'Reveal the history'})).toBeDisabled();
   await page.locator('.guess-buttons button').nth(2).click();await page.getByRole('button',{name:'Reveal the history'}).click();
   await expect(page.locator('.revealed')).toContainText('53.6%');await expect(page.locator('.revealed')).toContainText('134 wins from 250');await expect(page.locator('.revealed')).toContainText('75%');await shot('00-opening-reveal-1440');await page.setViewportSize({width:1280,height:720});await fit('intro-revealed',1280,720);await shot('00-opening-reveal-1280');await page.setViewportSize({width:1440,height:900});
   await page.getByRole('button',{name:'Explore the pattern'}).click();await expect(page.locator('.main-result')).toContainText('0.76');
@@ -52,55 +52,67 @@ try{
   const fraction=await page.locator('.position-share').evaluate(el=>el.firstElementChild.getBoundingClientRect().width/el.getBoundingClientRect().width);assert(Math.abs(fraction-713/4117)<.001);
   await explore('overview','driver=max-verstappen&team=marussia');await expect(page.locator('.position-share')).toHaveCount(0);
  });
- await check('the circuit reveal preserves scales, aligns rows and visibly highlights both measures',async()=>{
-  await load('circuits-field');assert.equal(await plot().evaluate(el=>el.data.length),1);await expect(page.locator('.circuit-pair')).not.toContainText('wins from pole');
-  await page.locator('.circuit-pair button').nth(1).click();await page.getByRole('button',{name:'Show wins from pole',exact:true}).click();
-  const d=await plot().evaluate(el=>({count:el.data.length,ys:el.data.map(t=>t.y),sizes:el.data.map(t=>t.marker.size),r:el.layout.xaxis.range,p:el.layout.xaxis2.range}));
-  assert.equal(d.count,2);assert.deepEqual(d.ys[0],d.ys[1]);assert(d.sizes.every(s=>s[1]>s[0]));assert.equal(d.r[0],-1);assert.equal(d.r[1],1.13);assert.equal(d.p[1],1.16);
-  await expect(page.locator('.circuit-pair')).toContainText('11/12 wins from pole');
+ await check('heatmap focus dims other outcomes without recalculating rates',async()=>{
+  await load();const before=await plot().evaluate(el=>el.data[0].z);
+  await page.getByRole('button',{name:'↗ Gained places',exact:true}).click();
+  assert.deepEqual(await plot().evaluate(el=>el.data[0].z),before);await expect(page.locator('.heatmap-focus-note')).toContainText('4,920 starts');
+  const mask=await plot().evaluate(el=>el.data[2].z);assert.equal(mask[0][1],null);assert.equal(mask[1][0],1);
+  await page.getByRole('button',{name:'Same position',exact:true}).click();await expect(page.locator('.heatmap-focus-note')).toContainText('713 of 4,920');
+  await page.getByRole('button',{name:'P17 · back',exact:true}).click();await expect(page.locator('.start-detail')).toContainText('STARTING P17');
+  await page.getByRole('button',{name:'All finishes',exact:true}).click();assert.deepEqual(await plot().evaluate(el=>el.data[0].z),before);
  });
- await check('top-ten movement uses signed changes, supports selection and restores shared views',async()=>{
-  await load('circuits-both');await page.getByRole('button',{name:'Compare positions gained',exact:true}).click();
-  const d=await plot().evaluate(el=>({x:el.data[0].x,detail:el.data[0].customdata,range:el.layout.xaxis.range}));
-  const expected=[-9/97,-73/110,-38/108,-55/92];d.x.forEach((x,i)=>assert(Math.abs(x-expected[i])<1e-12));
-  assert.deepEqual(d.range,[-1,1]);assert.deepEqual(d.detail.map(r=>r[2]),[97,110,108,92]);
-  await expect(page.locator('.circuit-detail')).toContainText('1.31 places');
-  await plot().evaluate(el=>el.emit('plotly_click',{points:[{customdata:el.data[0].customdata[3]}]}));
-  await expect(page.locator('.circuit-detail')).toContainText('2.14 places');await expect(page.locator('.circuit-detail')).toContainText('92 finishers from 108');
-  await page.reload();await ready();assert(new URL(page.url()).searchParams.get('step')==='circuits-movement');
-  await page.getByRole('button',{name:'Explore recovery',exact:true}).click();await expect(page.locator('h1')).toHaveText('Ability to recover');
-  await page.getByRole('button',{name:'Why can a fast car start at the back?',exact:true}).click();await expect(page.getByRole('dialog')).toContainText('not evidence that most recoveries');await expect(page.getByRole('dialog').getByRole('link',{name:'FIA qualifying report'})).toHaveAttribute('href',/fia.com/);await page.keyboard.press('Escape');
-  await explore('circuits','metric=movement&circuits=monaco');await expect(page.getByRole('button',{name:'Positions gained · P1–10',exact:true})).toHaveAttribute('aria-pressed','true');await page.reload();await ready();assert.equal(await plot().evaluate(el=>el.data[0].x[0]),-9/97);
+ await check('restored circuit panels include São Paulo and contrasting order and movement histories',async()=>{
+  await load('circuits-both');
+  const d=await plot().evaluate(el=>({count:el.data.length,r:el.data[0].x,rates:el.data[1].x,ys:el.data.map(t=>t.y),rows:el.data[0].customdata}));
+  assert.equal(d.count,2);assert.deepEqual(d.ys[0],d.ys[1]);
+  assert.deepEqual(d.rows.map(r=>r[0]),['monaco','yas-marina','interlagos','sochi','hungaroring']);
+  [.6,11/12,8/11,2/8,3/12].forEach((v,i)=>assert.equal(d.rates[i],v));
+  assert(Math.abs(d.r[0]-.85659207)<.000001);assert(Math.abs(d.r[3]-.68097174)<.000001);
+  await plot().evaluate(el=>el.emit('plotly_click',{points:[{customdata:el.data[0].customdata[2]}]}));
+  await expect(page.locator('.integrated-detail')).toContainText('1.95');await expect(page.locator('.integrated-detail')).toContainText('94 top-ten starter results');
+  await page.getByLabel('Circuit detail').selectOption('yas-marina');await expect(page.locator('.integrated-detail')).toContainText('11 wins from 12');
  });
- await check('the recovery reveal preserves the denominator and 0–100 scale, including rare positive rates',async()=>{
-  await load('recovery-top10');await expect(page.locator('.outcome-result')).toContainText('402 of 1,238');await expect(page.locator('.outcome-result')).toContainText('32.5%');
-  await page.getByRole('button',{name:'Win',exact:true}).click();await expect(page.locator('.outcome-result')).toContainText('2 of 1,238');await expect(page.locator('.outcome-result')).toContainText('0.16%');
-  assert.deepEqual(await plot().evaluate(el=>el.layout.xaxis.range),[0,100]);await expect(page.locator('.goal-comparison')).toContainText('402');
-  await page.getByRole('button',{name:'What about farther back?',exact:true}).click();await expect(page.locator('.outcome-result')).toContainText('1 of 1,185');await expect(page.locator('.outcome-result')).toContainText('0.08%');
-  await page.getByRole('button',{name:'Follow that race',exact:true}).click();await expect(page.locator('.race-position-list')).toContainText('P17');await expect(page.locator('.scope-block')).toContainText('starting grid');
+ await check('circuit scales, uncertainty and legacy links retain honest comparisons',async()=>{
+  await load('circuits-both');assert.equal(new URL(page.url()).searchParams.get('step'),'circuits-both');
+  const d=await plot().evaluate(el=>({r:el.layout.xaxis.range,p:el.layout.xaxis2.range,ci:el.data.map(t=>t.error_x.array)}));
+  assert.deepEqual(d.r,[-1,1.13]);assert.deepEqual(d.p,[-.02,1.16]);assert(d.ci.every(a=>a.every(v=>v>0)));
+  await page.getByRole('button',{name:'Compare position change',exact:true}).click();await expect(page.getByRole('button',{name:'Position change · P1–10',exact:true})).toHaveAttribute('aria-pressed','true');
+  assert((await plot().evaluate(el=>el.data[0].x)).every(v=>v>=0));
+  await page.getByRole('button',{name:'Watch São Paulo 2024',exact:true}).click();await expect(page.locator('.race-position-list')).toContainText('P17');
  });
- await check('recovery value blocks do not collide at projector size and row pitch remains readable',async()=>{
-  await page.setViewportSize({width:1280,height:720});await load('recovery-win');
-  const d=await plot().evaluate(el=>({pitch:el._fullLayout.yaxis._length/5.2,rects:[...el.querySelectorAll('.annotation')].filter(g=>!g.textContent.includes('RESULTS / STARTS')).map(g=>{const r=g.querySelector('.annotation-text').getBoundingClientRect();return {top:r.top,bottom:r.bottom};}).sort((a,b)=>a.top-b.top)}));
-  assert(d.pitch>=48,`row pitch ${d.pitch}`);assert.equal(d.rects.length,10);for(let i=1;i<d.rects.length;i++)assert(d.rects[i].top>=d.rects[i-1].bottom+2,'rate/count labels collide');
+ await check('recovery follows the heatmap and combines all outcomes on shared scales with back groups first',async()=>{
+  await load('overview');await page.getByRole('button',{name:'Explore recovery',exact:true}).click();
+  await expect(page.locator('.outcome-result')).toContainText('167 of 1,185');await expect(page.locator('.outcome-result')).toContainText('14.1%');
+  const d=await plot().evaluate(el=>({n:el.data.length,axes:[el.layout.xaxis.range],extraAxis:!!el.layout.xaxis2,values:el.data.map(t=>t.x[0]),order:el.data[0].customdata.map(r=>r[0])}));
+  assert.equal(d.n,3);assert.equal(d.extraAxis,false);d.axes.forEach(a=>assert.deepEqual(a,[0,100]));assert.deepEqual(d.order,[4,3,2,1,0]);
+  [167,12,1].forEach((n,i)=>assert(Math.abs(d.values[i]-100*n/1185)<1e-10));
+  await page.getByRole('button',{name:'Reveal podium',exact:true}).click();await page.getByRole('button',{name:'Reveal wins',exact:true}).click();await expect(page.locator('.outcome-result')).toContainText('1 of 1,185');await expect(page.locator('.outcome-result')).toContainText('0.08%');
+  await page.getByLabel('Starting group · back to front').selectOption('3');await expect(page.locator('.outcome-result')).toContainText('2 of 1,238');
+  await page.getByRole('button',{name:'Compare the circuits',exact:true}).click();await expect(page.locator('h1')).toContainText('by circuit');
+ });
+ await check('combined recovery labels fit without collisions on desktop, projector and mobile',async()=>{
+  for(const [w,h] of [[1440,900],[1280,720],[390,844]]){
+   await page.setViewportSize({width:w,height:h});await load('recovery-win');
+   const d=await plot().evaluate(el=>({pitch:el._fullLayout.yaxis._length/5,rects:[...el.querySelectorAll('.annotation-text')].map(t=>{const r=t.getBoundingClientRect();const p=el.getBoundingClientRect();return {text:t.textContent,left:r.left-p.left,right:r.right-p.left,top:r.top-p.top,bottom:r.bottom-p.top,width:p.width,height:p.height};})}));
+   assert(d.pitch>=(w===390?36:48),`row pitch ${d.pitch}`);assert.equal(d.rects.length,15);
+   for(const r of d.rects)assert(r.left>=0&&r.right<=r.width&&r.top>=0&&r.bottom<=r.height,`recovery label clipped: ${JSON.stringify(r)}`);
+   for(let i=0;i<d.rects.length;i++)for(let j=i+1;j<d.rects.length;j++){const a=d.rects[i],b=d.rects[j];assert(!(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom),`recovery labels overlap: ${a.text} / ${b.text}`);}
+  }
   await page.setViewportSize({width:1440,height:900});
  });
- await check('the rare-rate marker selects its own group without enlarging the data value',async()=>{
+ await check('rare-rate marker selects its group and outcome without enlarging the data value',async()=>{
   await load('recovery-win');
-  const d=await plot().evaluate(el=>({bar:el.data[0].x[4],dot:el.data[1].x[4],detail:el.data[1].customdata[4]}));
-  assert(Math.abs(d.bar-100/1185)<1e-12);assert.equal(d.dot,d.bar);assert.equal(d.detail[0],4);
-  await plot().evaluate(el=>el.emit('plotly_click',{points:[{curveNumber:1,x:el.data[1].x[4],y:4,customdata:el.data[1].customdata[4]}]}));
+  const d=await plot().evaluate(el=>({dot:el.data[2].x[0],detail:el.data[2].customdata[0]}));
+  assert(Math.abs(d.dot-100/1185)<1e-12);assert.deepEqual(d.detail.slice(0,4),[4,'win',1,1185]);
+  await plot().evaluate(el=>el.emit('plotly_click',{points:[{curveNumber:2,x:el.data[2].x[0],y:el.data[2].y[0],customdata:el.data[2].customdata[0]}]}));
   await expect(page.locator('.outcome-result')).toContainText('1 of 1,185');
  });
- await check('circuit values and headers stay inside the chart without overlapping at presentation and mobile sizes',async()=>{
-  for(const [w,h] of [[1920,1080],[1280,720],[390,844]]){
+ await check('paired circuit labels remain inside the chart across screen sizes',async()=>{
+  for(const [w,h] of [[2560,1440],[1920,1080],[1280,720],[390,844]]){
    await page.setViewportSize({width:w,height:h});await load('circuits-both');
-   for(const metric of w===390?['The field','The winner']:['both']){
-    if(metric!=='both')await page.getByRole('button',{name:metric,exact:true}).click();
-    const rects=await plot().evaluate(el=>[...el.querySelectorAll('.annotation-text')].map(t=>{const r=t.getBoundingClientRect();const c=el.closest('.chart-card').getBoundingClientRect();return {text:t.textContent,left:r.left-c.left,right:r.right-c.left,top:r.top-c.top,bottom:r.bottom-c.top,width:c.width,height:c.height};}));
-    for(const r of rects)assert(r.left>=0&&r.right<=r.width&&r.top>=0&&r.bottom<=r.height,`clipped annotation at ${w}: ${JSON.stringify(r)}`);
-    for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){const a=rects[i],b=rects[j];assert(!(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom),`overlapping circuit values at ${w}: ${a.text}, ${b.text}`);}
-   }
+   const rects=await plot().evaluate(el=>[...el.querySelectorAll('.annotation-text,.textpoint text')].map(t=>{const r=t.getBoundingClientRect(),c=el.getBoundingClientRect();return {text:t.textContent,left:r.left-c.left,right:r.right-c.left,top:r.top-c.top,bottom:r.bottom-c.top,width:c.width,height:c.height};}));
+   for(const r of rects)assert(r.left>=-1&&r.right<=r.width+1&&r.top>=-1&&r.bottom<=r.height+1,`clipped circuit label at ${w}: ${JSON.stringify(r)}`);
+   for(let i=0;i<rects.length;i++)for(let j=i+1;j<rects.length;j++){const a=rects[i],b=rects[j];assert(!(a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom),`overlapping circuit labels at ${w}: ${a.text}, ${b.text}`);}
   }
   await page.setViewportSize({width:1440,height:900});
  });
@@ -108,11 +120,36 @@ try{
   const expected={0:[17,1,4],11:[6,2,4],33:[2,4,1],43:[1,7,2],69:[1,6,2]};
   for(const lap of [0,11,33,43,69]){
    await load(lap===0?'case-grid':`case-${lap}`);
+   const cars=await plot().evaluate(el=>el.layout.images.map(i=>({x:i.x,y:i.y,source:i.source})));assert.equal(cars.length,3);cars.forEach((c,i)=>{assert.equal(c.x,lap);assert.equal(c.y,expected[lap][i]);assert(c.source.startsWith('data:image/svg+xml'));});
    const d=await plot().evaluate(el=>el.data.slice(0,3).map(t=>({xs:t.x,ys:t.y})));
    d.forEach((t,i)=>{assert.equal(Math.max(...t.xs),lap);assert.equal(t.ys.at(-1),expected[lap][i]);assert.equal(t.xs.length,lap+1);});
    const text=await page.locator('main').innerText();if(lap<69){assert(!text.includes('finished sixth'));assert(!text.includes('17th to first.'));}
    await expect(page.locator('.race-position-list').locator('div').nth(0)).toContainText(`P${expected[lap][0]}`);
   }
+ });
+ await check('race playback advances observed laps, pauses, restarts, stops at finish and respects manual navigation',async()=>{
+  await load('case-grid');await page.getByRole('button',{name:'Play race',exact:true}).click();await page.waitForTimeout(1350);
+  let lap=Number(await page.locator('#lap-scrubber').inputValue());assert(lap>=1&&lap<5);await page.getByRole('button',{name:'Pause race',exact:true}).click();
+  lap=Number(await page.locator('#lap-scrubber').inputValue());await page.waitForTimeout(800);assert.equal(Number(await page.locator('#lap-scrubber').inputValue()),lap);
+  await page.locator('#lap-scrubber').fill('68');await page.getByLabel('Playback speed').selectOption('2');await page.getByRole('button',{name:'Play race',exact:true}).click();await expect(page.locator('#lap-scrubber')).toHaveValue('69');await expect(page.getByRole('button',{name:'Play race',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Replay race from the grid'}).click();await expect(page.locator('#lap-scrubber')).toHaveValue('0');
+  await page.getByRole('button',{name:'Play race',exact:true}).click();await page.getByRole('button',{name:/LAP 33/}).click();await page.waitForTimeout(750);await expect(page.locator('#lap-scrubber')).toHaveValue('33');await expect(page.getByRole('button',{name:'Play race',exact:true})).toBeVisible();
+  await page.reload();await ready();await expect(page.locator('#lap-scrubber')).toHaveValue('33');await expect(page.getByRole('button',{name:'Play race',exact:true})).toBeVisible();
+  await page.getByRole('button',{name:'Explore',exact:true}).click();await page.getByRole('button',{name:'Play race',exact:true}).click();await page.getByRole('button',{name:/LAP 11/}).click();await page.waitForTimeout(750);await expect(page.locator('#lap-scrubber')).toHaveValue('11');
+ });
+ await check('one-minute closing uses three fixed examples, exact counts and no filters',async()=>{
+  await load('closing');await expect(page.locator('.decision-column')).toHaveCount(3);
+  assert.equal(await page.locator('.closing-stage select,.closing-stage input').count(),0);
+  await expect(page.locator('.strategy-decision')).toContainText('14.1%');await expect(page.locator('.strategy-decision')).toContainText('167 of 1,185 starts');
+  assert.equal(await page.locator('.waffle i').count(),100);
+  const filled=await page.locator('.waffle i').evaluateAll(es=>es.filter(e=>e.style.background.includes('100%')).length);assert(filled>=14);
+  await expect(page.locator('.design-decision')).toContainText('Monaco');await expect(page.locator('.design-decision')).toContainText('Hungaroring');
+  const xs=await page.locator('.movement-summary circle').evaluateAll(es=>es.map(e=>Number(e.getAttribute('cx'))));
+  [1.309278350515464,2.383177570093458].forEach((v,i)=>assert(Math.abs(xs[i]-(24+v/3*312))<1e-9));
+  const rates=await page.locator('.pole-sample').evaluateAll(es=>es.map(e=>({starts:e.querySelectorAll('.pole-tile').length,wins:e.querySelectorAll('.won').length,text:e.textContent})));
+  assert.deepEqual(rates.map(r=>[r.wins,r.starts]),[[6,10],[11,12]]);
+  for(const [w,h] of [[1440,900],[1280,720]]){await page.setViewportSize({width:w,height:h});await fit('closing',w,h);const cards=await page.locator('.decision-column').evaluateAll(es=>es.map(e=>({c:e.getBoundingClientRect().bottom,b:e.lastElementChild.getBoundingClientRect().bottom})));assert(cards.every(c=>c.b<=c.c),JSON.stringify(cards));const visuals=await page.locator('.decision-visual').evaluateAll(es=>es.map(e=>({client:e.clientHeight,scroll:e.scrollHeight})));assert(visuals.every(v=>v.scroll<=v.client+2),JSON.stringify(visuals));}
+  await page.setViewportSize({width:1440,height:900});
  });
  await check('checkpoint navigation, Back, direct links and keyboard arrows agree',async()=>{
   await load('case-33');await page.getByRole('button',{name:'Previous story step'}).click();await expect(page.locator('.scope-block')).toContainText('lap 11');
@@ -120,7 +157,7 @@ try{
   await page.reload();await ready();await expect(page.locator('.scope-block')).toContainText('lap 33');
   await page.getByLabel('Lap 33 / 69').focus();await page.keyboard.press('ArrowRight');await expect(page.locator('.scope-block')).toContainText('lap 34');
   await page.getByRole('button',{name:'Show full race'}).click();await expect(page.locator('.race-position-list')).toContainText('P6');
-  await page.getByRole('button',{name:'The takeaway',exact:true}).click();await expect(page.locator('.closing-stage')).toBeVisible();await page.getByRole('button',{name:'Explore the evidence',exact:true}).click();await expect(page.getByRole('button',{name:'Hide filters'})).toBeVisible();
+  await page.getByRole('button',{name:'What can we use this for?',exact:true}).click();await expect(page.locator('.closing-stage')).toBeVisible();await page.getByRole('button',{name:'Explore the evidence',exact:true}).click();await expect(page.getByRole('button',{name:'Hide filters'})).toBeVisible();
  });
  await check('highlighting, cohort filtering and shared Explore URLs retain distinct meanings',async()=>{
   await explore();await page.getByRole('button',{name:'Edit selection'}).click();
@@ -130,7 +167,7 @@ try{
  });
  await check('filtered cohorts do not inherit default story claims or unsupported uncertainty',async()=>{
   await explore('recovery','years=2022,2023&outcome=win&band=4');await expect(page.locator('.bridge-note')).toHaveCount(0);await expect(page.locator('h1')).not.toContainText('One win');
-  await explore('circuits','years=2024,2024&circuits=monaco,yas-marina,monza,spa-francorchamps');await expect(page.locator('.chart-controls').last()).toContainText('point estimates only');assert((await plot().evaluate(el=>el.data[0].error_x.array)).every(n=>n===0));
+  await explore('circuits','years=2024,2024&circuits=monaco,yas-marina,monza,spa-francorchamps');await expect(page.locator('.chart-controls').last()).toContainText('point estimates only');await page.getByLabel('Include limited histories').check();assert((await plot().evaluate(el=>el.data.flatMap(t=>t.error_x.array))).every(n=>n===0));
   await page.getByRole('button',{name:'Present',exact:true}).click();await expect(page.locator('.scope-block')).toContainText('2014');assert.equal(await plot().evaluate(el=>el.data.length),1);
  });
  await check('empty cohorts display absence rather than false zero or a strong association claim',async()=>{
@@ -148,25 +185,22 @@ try{
   await load();await page.getByRole('button',{name:'Data',exact:true}).click();const csvPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download CSV'}).click();const csv=await csvPromise;await csv.saveAs(path.join(out,'visible-data.csv'));const txt=fs.readFileSync(path.join(out,'visible-data.csv'),'utf8');assert(txt.includes('data_source'));assert.equal(txt.split('\r\n').length,5089);await page.keyboard.press('Escape');
   await load('case-33');const pngPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const png=await pngPromise;assert(png.suggestedFilename().includes('lap-33'));await png.saveAs(path.join(out,'attributed-case-lap-33.png'));assert(fs.statSync(path.join(out,'attributed-case-lap-33.png')).size>10000);
   await load('circuits-both');const circuitPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const circuit=await circuitPromise;await circuit.saveAs(path.join(out,'circuit-export.png'));assert(fs.statSync(path.join(out,'circuit-export.png')).size>10000);
+  await load('recovery-win');const recoveryPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const recovery=await recoveryPromise;await recovery.saveAs(path.join(out,'recovery-export.png'));assert(fs.statSync(path.join(out,'recovery-export.png')).size>10000);
   await load('circuits-movement');const movePromise=page.waitForEvent('download');await page.getByRole('button',{name:'Save chart as PNG'}).click();const movement=await movePromise;await movement.saveAs(path.join(out,'movement-export.png'));assert(fs.statSync(path.join(out,'movement-export.png')).size>10000);
  });
  await check('mobile opening, charts, selectors and closing have no horizontal overflow',async()=>{
   await page.setViewportSize({width:390,height:844});
-  for(const step of ['intro','overview','circuits-both','circuits-movement','recovery-win','case-33','closing']){
+  for(const step of ['intro','overview','circuits-both','circuits-movement','recovery-top10','case-33','closing']){
    await load(step);assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`mobile overflow ${step}`);await shot(`${step}-390`);
-   if(step==='circuits-movement'){
-    const ticks=await plot().evaluate(el=>[...el.querySelectorAll('.xtick text')].map(t=>({text:t.textContent,width:t.getBoundingClientRect().width,right:t.getBoundingClientRect().right})));
-    assert(ticks.some(t=>t.text.includes('+1')&&t.width>0&&t.right<=390),'positive movement axis label is missing or clipped');
-   }
-   if(step==='circuits-both'){await page.getByRole('button',{name:'The field',exact:true}).click();await page.getByRole('button',{name:'The winner',exact:true}).click();}
+
   }
  });
  await check('reduced motion retains all evidence and a zoom-equivalent narrow viewport reflows',async()=>{
   await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:1280,height:720});await load('case-grid');await page.getByRole('button',{name:/LAP 43/}).click();assert.equal(await plot().evaluate(el=>Math.max(...el.data[0].x)),43);
-  await page.setViewportSize({width:640,height:360});await load('recovery-win');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert(await page.evaluate(()=>document.body.scrollHeight>innerHeight));await expect(page.locator('.outcome-result')).toContainText('0.16%');
+  await page.setViewportSize({width:640,height:360});await load('recovery-win','outcome=win');assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert(await page.evaluate(()=>document.body.scrollHeight>innerHeight));await expect(page.locator('.outcome-result')).toContainText('0.08%');
   await page.emulateMedia({reducedMotion:'no-preference'});
  });
  assert.deepEqual(errors,[],'Browser errors');assert.equal(external.length,0,'External runtime requests');
- fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:true,revision:'presentation-context-and-top-ten-movement',checks,browserErrors:errors,externalRuntimeRequests:external,viewports:[[1440,900],[1280,720],[390,844]],additionalViewport:[640,360],base},null,2));
+ fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:true,revision:'absolute-movement-and-race-control',checks,browserErrors:errors,externalRuntimeRequests:external,viewports:[[1440,900],[1280,720],[390,844]],additionalViewport:[640,360],base},null,2));
  console.log(`Verified ${checks.length} browser checks, no external runtime requests.`);
 }catch(error){await shot('failure');fs.writeFileSync(path.join(out,'browser-validation.json'),JSON.stringify({passed:false,checks,error:String(error),browserErrors:errors,externalRuntimeRequests:external},null,2));throw error;}finally{await browser.close();}

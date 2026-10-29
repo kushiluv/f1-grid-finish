@@ -1,3 +1,23 @@
+# Explain movement sample counts · 28 October 2026
+
+- Replaced `n = …` with `… driver results`, and explained that each driver counts once per race. The same driver can contribute results from several races.
+- Reserved enough room for the longer labels on mobile and desktop.
+
+# Circuit heading clipping fix · 28 October 2026
+
+- Anchored circuit panel headings inside the reserved top margin using fixed pixel spacing. They remain visible as the chart grows taller.
+- Extended the browser regression check to 2560×1440 and checked labels against the plot boundary, where SVG clipping occurs.
+
+# Recovery-first story and race playback · 28 October 2026
+
+- Removed the navbar slogan and added the official F1 logo to the opening.
+- Moved recovery directly after the heatmap, with P16–22 first and three simultaneous outcome panels sharing a 0–100% scale.
+- Added São Paulo, Sochi and Hungaroring to the presentation circuit contrasts. Showed the extremes among circuits with at least eight races and distinguished correlation from movement.
+- Replaced signed mean movement in the chart with mean absolute change for top-ten starters who finished. Source records and underlying calculations remain auditable.
+- Added play/pause, playback speed, replay and observed-position car markers to the São Paulo trace. Navigation and manual inspection pause playback.
+- Replaced the slogan ending with interactive evidence cards for strategy, circuit design and betting analysis. Removed extra plain-text context dialogs; definitions remain available under Sources & methods.
+- Updated the six-minute speaking route, per-speaker execution plan, responsive layouts and browser/export checks.
+
 # Presentation context and top-ten movement · 28 October 2026
 
 - Simplified the opening title and definitions, emphasized pole position, removed extra headings and guess qualifiers, and made the 53.6% reveal explicit.
@@ -34,3 +54,27 @@ Implemented the requested visual/storytelling brief on the existing local applic
 - Preserved canonical calculations, cohort semantics, source/correction records, uncertainty rules, offline operation, records, and exports.
 
 The redesigned app is a local build. Use `Start Dashboard.command` or the Python launcher to open it. The delivered browser report and screenshots record the actual validation results.
+
+
+## Final visual refinement
+
+Retained the same four tabs, order, question and race case. Reviewed Navigate A (dashboard hierarchy, single-screen layout, connected interaction and action orientation) and Navigate B (questions and decisions before tooling). Retained the preferred paired circuit panels with São Paulo and contrasting circuit histories. Combined recovery outcomes on one shared-axis dot plot. Added denominator-preserving heatmap focus and redesigned the same three potential impacts with recovery cells, movement-frequency curves and a pole-win benchmark with intervals. Updated source definitions, exports and the existing six-minute speaking route. No new causal or predictive claims; the frozen source data are unchanged.
+
+## Outcome replay and circuit reveal
+
+Added accessible, replayable outcome legends with stronger series colours and circle/diamond/triangle markers. Recovery lines draw across the shared axis while labels and markers appear at their true endpoints. Restored the hidden pole-win panel and its reveal/Back steps. Animation is confined to rendered SVG, leaves all data and exports exact, and is skipped or cancelled when reduced motion is requested. The four-tab story is unchanged.
+
+
+## Sequential recovery reveal
+
+Present now draws Top ten on entry, adds Podium and then Win using the footer Next action, and keeps previously revealed outcomes on the shared scale. Back hides later outcomes; unrevealed series, numeric labels, outcome controls and the race callout stay hidden or disabled until their step. URLs and exports preserve the reveal stage, and Explore retains the full comparison. Reduced-motion settings show each newly revealed outcome immediately.
+
+
+## One-minute impact summary
+
+Condensed the closing into three fixed examples and one short use per audience. Removed all closing dropdowns, the movement threshold slider, distribution curves and the additional pole-rate difference/interval comparison. Kept exact recovery evidence, a directly labelled Monaco–Hungaroring mean-absolute-change ruler, and Monaco–Yas Marina pole-start tiles that show the small samples. Added restrained entry animation with reduced-motion support and updated the 45–60-second speaking route. The four analytical tabs and underlying data are unchanged.
+
+
+## Absolute movement and race-control context
+
+Restored the circuit Position change view with mean absolute grid-to-finish values, explicit finish counts and a short entry animation. Added a presentation step and view switch while retaining the paired correlation/pole panels. Added selected São Paulo VSC, safety-car, red-flag, restart and finish milestones from the frozen OpenF1 messages and FIA account. Plot shading clips to the revealed lap; a compact note follows the latest reached event, and playback briefly holds at those milestones. Preserved all rank traces, source corrections, outcome rates and the one-minute closing. Source-message laps are distinguished from narrative race laps in Methods and the speaking notes.

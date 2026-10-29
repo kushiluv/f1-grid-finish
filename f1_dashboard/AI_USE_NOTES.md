@@ -27,3 +27,31 @@ Codex reviewed the project rubric and existing slides, then refined chart contra
 ## Presentation context revision · 28 October 2026
 
 Codex implemented the team's requested wording and layout changes and the P1–10 starter movement calculation. It checked signed circuit totals against independent raw-record counts, distinguished actual P1 starts from qualifying on pole, and added linked FIA reports for the São Paulo penalty example. It updated the speaking route, responsive checks and release build. No claim that most back-grid recoveries are penalty-driven was inferred from these data. No AI-generated photographs or decorative chart animations were added.
+
+## Recovery-first story and playback · 28 October 2026
+
+Codex implemented the requested story reorder, combined outcomes, absolute movement chart, evidence-based circuit selection, observed-lap playback and car SVG markers. It added the official F1 logo from Formula 1’s website with local source attribution, and interactive practical-impact cards using the existing verified snapshot. It revised the speaker plan and checked presentation geometry, interactions, filtered states, data definitions and chart exports. The car SVGs are code illustrations; no AI-generated racing photographs or fabricated data were added. Deployment was not performed in this turn.
+
+
+## Final visual refinement
+
+Retained the same four tabs, order, question and race case. Reviewed Navigate A (dashboard hierarchy, single-screen layout, connected interaction and action orientation) and Navigate B (questions and decisions before tooling). Retained the preferred paired circuit panels with São Paulo and contrasting circuit histories. Combined recovery outcomes on one shared-axis dot plot. Added denominator-preserving heatmap focus and redesigned the same three potential impacts with recovery cells, movement-frequency curves and a pole-win benchmark with intervals. Updated source definitions, exports and the existing six-minute speaking route. No new causal or predictive claims; the frozen source data are unchanged.
+
+## Outcome replay and circuit reveal
+
+Added accessible, replayable outcome legends with stronger series colours and circle/diamond/triangle markers. Recovery lines draw across the shared axis while labels and markers appear at their true endpoints. Restored the hidden pole-win panel and its reveal/Back steps. Animation is confined to rendered SVG, leaves all data and exports exact, and is skipped or cancelled when reduced motion is requested. The four-tab story is unchanged.
+
+
+## Sequential recovery reveal
+
+Present now draws Top ten on entry, adds Podium and then Win using the footer Next action, and keeps previously revealed outcomes on the shared scale. Back hides later outcomes; unrevealed series, numeric labels, outcome controls and the race callout stay hidden or disabled until their step. URLs and exports preserve the reveal stage, and Explore retains the full comparison. Reduced-motion settings show each newly revealed outcome immediately.
+
+
+## One-minute impact summary
+
+Condensed the closing into three fixed examples and one short use per audience. Removed all closing dropdowns, the movement threshold slider, distribution curves and the additional pole-rate difference/interval comparison. Kept exact recovery evidence, a directly labelled Monaco–Hungaroring mean-absolute-change ruler, and Monaco–Yas Marina pole-start tiles that show the small samples. Added restrained entry animation with reduced-motion support and updated the 45–60-second speaking route. The four analytical tabs and underlying data are unchanged.
+
+
+## Absolute movement and race-control context
+
+Restored the circuit Position change view with mean absolute grid-to-finish values, explicit finish counts and a short entry animation. Added a presentation step and view switch while retaining the paired correlation/pole panels. Added selected São Paulo VSC, safety-car, red-flag, restart and finish milestones from the frozen OpenF1 messages and FIA account. Plot shading clips to the revealed lap; a compact note follows the latest reached event, and playback briefly holds at those milestones. Preserved all rank traces, source corrections, outcome rates and the one-minute closing. Source-message laps are distinguished from narrative race laps in Methods and the speaking notes.

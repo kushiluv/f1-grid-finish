@@ -1,13 +1,13 @@
 import type {AppState, Chapter, DriverRace} from './data/types';
 export const CHAPTERS: {id:Chapter;name:string;label:string;time:string}[] = [
-  {id:'overview',name:'The relationship',label:'Grid → finish',time:'0:35–1:40'},
-  {id:'circuits',name:'The circuit',label:'Two kinds of predictability',time:'1:40–2:50'},
-  {id:'recovery',name:'Ability to recover',label:'Reaching the top ten',time:'2:50–4:00'},
-  {id:'case',name:'The exception',label:'São Paulo 2024',time:'4:00–5:30'},
+  {id:'overview',name:'The pattern',label:'Grid → finish',time:'0:35–1:30'},
+  {id:'recovery',name:'Ability to recover',label:'Three outcomes',time:'1:30–2:25'},
+  {id:'circuits',name:'The circuit',label:'Order and movement',time:'2:25–3:45'},
+  {id:'case',name:'The race',label:'São Paulo 2024',time:'3:45–5:15'},
 ];
-export const PRESENT_CIRCUITS=['monaco','yas-marina','monza','spa-francorchamps'];
+export const PRESENT_CIRCUITS=['monaco','yas-marina','interlagos','sochi','hungaroring'];
 export function preset(chapter:Chapter,mode:'present'|'explore'='present'):AppState {
-  return {mode,chapter,circuitMetric:'order',years:[2014,2025],circuitIds:chapter==='circuits'?PRESENT_CIRCUITS:[],outcome:'top10',selectedStart:null,selectedBand:3,highlightedDriverId:'',cohortDriverId:'',cohortConstructorId:'',includeBelgium2021:false,caseLap:null,caseEvent:null,showGasly:false};
+  return {mode,chapter,circuitMetric:'order',years:[2014,2025],circuitIds:chapter==='circuits'?PRESENT_CIRCUITS:[],outcome:'top10',selectedStart:null,selectedBand:4,highlightedDriverId:'',cohortDriverId:'',cohortConstructorId:'',includeBelgium2021:false,caseLap:null,caseEvent:null,showGasly:false};
 }
 export function readState(search:string,rows:DriverRace[]):AppState {
   const p=new URLSearchParams(search),chapter=CHAPTERS.some(x=>x.id===p.get('chapter'))?p.get('chapter') as Chapter:'overview';

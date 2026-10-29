@@ -1,6 +1,7 @@
 """Prepare local, typed app data and audit decisions from the planning snapshot."""
 from pathlib import Path
 import csv, json, hashlib, datetime, sys, contextlib, io, runpy
+from prepare_race_control import build_control_events
 
 ROOT = Path(__file__).resolve().parents[1]
 PLAN = ROOT.parent / 'f1_dashboard_plan'
@@ -78,11 +79,13 @@ write('race_case.json',{
         {'lap':43,'label':'A new leader','title':'Verstappen takes first','description':'At the restart, Verstappen passed Ocon for the lead on lap 43. He finished first; Norris, the first-position starter, finished sixth.','kind':'restart'}
     ],
     'red_flag':{'start_lap':32,'end_lap':33,'utc':'2024-11-03T16:37:22Z'},
+    'control_events':build_control_events(PLAN/'data/openf1/race_control_9636.json'),
     'method':'Actual lap-end positions from the Jolpica lap chart; grid anchor and endpoints cross-checked with F1DB. Key milestones corroborated by the FIA race report. Race-control timestamps are retained in raw data; a message lap can differ from the next racing lap. This is a deliberately selected exceptional race.',
     'sources':[
         {'title':'Jolpica lap chart','url':'https://api.jolpi.ca/ergast/f1/2024/21/laps/?format=json&limit=100'},
         {'title':'FIA race account','url':'https://www.fia.com/news/f1-vestappen-takes-stunning-sao-paulo-win-p17-grid-alpine-score-double-podium'},
-        {'title':'OpenF1 session data','url':'https://api.openf1.org/v1/sessions?session_key=9636'}
+        {'title':'OpenF1 session data','url':'https://api.openf1.org/v1/sessions?session_key=9636'},
+        {'title':'OpenF1 race-control messages','url':'https://api.openf1.org/v1/race_control?session_key=9636'}
     ]
 })
 

@@ -16,9 +16,10 @@ describe('presentation routes and verified story bridge',()=>{
     const state=stateForStep('case-33');const url=storyUrl(state,'case-33');
     const step=readStory(url);expect(step).toBe('case-33');expect(stateForStep(step).caseLap).toBe(33);
     state.caseLap=34;expect(readPresentationState(storyUrl(state,'case-33')).caseLap).toBe(34);
-    const custom=stateForStep('recovery-top10');custom.outcome='podium';custom.selectedBand=0;
-    expect(readPresentationState(storyUrl(custom,'recovery-top10'))).toEqual(custom);
-    const recovery=stateForStep('recovery-back');expect(recovery.outcome).toBe('win');expect(recovery.selectedBand).toBe(4);
+    const custom=stateForStep('recovery-podium');custom.outcome='top10';custom.selectedBand=0;
+    expect(readPresentationState(storyUrl(custom,'recovery-podium'))).toEqual(custom);
+    expect(readPresentationState('?step=recovery-top10&outcome=win').outcome).toBe('top10');
+    const recovery=readPresentationState('?step=recovery-back');expect(recovery.outcome).toBe('win');expect(recovery.selectedBand).toBe(4);
     expect(stateForStep(readStory('?step=recovery-win&driver=max-verstappen')).cohortDriverId).toBe('');
   });
   it('preserves Explore URLs independently of hidden presentation beats',()=>{
@@ -26,7 +27,7 @@ describe('presentation routes and verified story bridge',()=>{
     const again=readState(storyUrl(state,'case-69'),rows);expect(again).toEqual(state);
   });
   it('backs out of reveals in a deterministic sequence',()=>{
-    expect(adjacentStep('circuits-both',-1)).toBe('circuits-field');
+    expect(adjacentStep('circuits-field',-1)).toBe('recovery-win');
     expect(adjacentStep('case-33',-1)).toBe('case-11');
     expect(adjacentStep('case-69',1)).toBe('closing');expect(adjacentStep('intro',-1)).toBe('intro');
   });
@@ -40,9 +41,22 @@ describe('presentation routes and verified story bridge',()=>{
   });
 });
 
-it('restores movement from shared URLs and includes it in the speaking route',()=>{
- const state=stateForStep('circuits-movement');expect(state.circuitMetric).toBe('movement');
- expect(readPresentationState(storyUrl(state,'circuits-movement'))).toEqual(state);
- expect(adjacentStep('circuits-both',1)).toBe('circuits-movement');expect(adjacentStep('circuits-movement',1)).toBe('recovery-top10');
- state.mode='explore';expect(readState(storyUrl(state,'circuits-movement'),rows).circuitMetric).toBe('movement');
+it('preserves each circuit view and advances through absolute movement',()=>{
+ for(const step of ['circuits-both','circuits-movement'] as const)expect(readStory('?step='+step)).toBe(step);
+ expect(stateForStep('circuits-movement').circuitMetric).toBe('movement');
+ expect(adjacentStep('circuits-field',1)).toBe('circuits-both');
+ expect(adjacentStep('circuits-both',1)).toBe('circuits-movement');
+ expect(adjacentStep('circuits-movement',1)).toBe('case-grid');
+ expect(adjacentStep('case-grid',-1)).toBe('circuits-movement');
+ expect(adjacentStep('circuits-both',-1)).toBe('circuits-field');
+});
+
+it('reveals recovery outcomes in order before continuing to the circuits',()=>{
+ expect(adjacentStep('overview',1)).toBe('recovery-top10');
+ for(const [step,next,outcome] of [['recovery-top10','recovery-podium','top10'],['recovery-podium','recovery-win','podium'],['recovery-win','circuits-field','win']] as const){
+  expect(adjacentStep(step,1)).toBe(next);
+  expect(stateForStep(step)).toMatchObject({selectedBand:4,outcome});
+ }
+ expect(adjacentStep('recovery-win',-1)).toBe('recovery-podium');
+ expect(adjacentStep('recovery-podium',-1)).toBe('recovery-top10');
 });

@@ -9,28 +9,33 @@ browser=json.loads((out/'browser-validation.json').read_text())
 units=json.loads((out/'unit-test-results.json').read_text())
 data=json.loads((out/'data-validation.json').read_text())
 launcher=json.loads((out/'launcher-validation.json').read_text())
-movement=json.loads((out/'movement-production-validation.json').read_text())
-assert browser['passed'] and units['success'] and data['passed'] and launcher['passed'] and movement['passed']
-assert units['numPassedTests']>=14
-assert len(browser['checks'])>=16
+production=json.loads((out/'story-production-validation.json').read_text())
+assert browser['passed'] and units['success'] and data['passed'] and launcher['passed'] and production['passed']
+assert json.loads((out/'animation-validation.json').read_text())['passed']
+assert units['numPassedTests']>=20
+assert len(browser['checks'])>=22
+assert browser['revision']==launcher['revision']==production['revision']=='absolute-movement-and-race-control'
 failure=out/'screenshots/failure.png'
 if failure.exists():failure.unlink()
 index=(root/'dist/index.html').read_text()
 assets=re.findall(r'(?:src|href)="(\./assets/[^"]+)"',index)
 assert assets and all((root/'dist'/a[2:]).exists() for a in assets)
+assert launcher['built_index_sha256']==hashlib.sha256((root/'dist/index.html').read_bytes()).hexdigest()
 report={
   'status':'built and verified locally',
   'build':'TypeScript type check and Vite production build passed',
   'unit_tests_passed':units['numPassedTests'],
   'browser_checks_passed':len(browser['checks']),
-  'additional_production_checks_passed':len(movement['checks']),
+  'additional_production_checks_passed':len(production['checks']),
   'verified_viewports':browser['viewports'],
   'external_runtime_requests':0,
   'visual_review':'Desktop, projector, mobile and attributed chart-export images inspected; responsive sizing, labels and export background/attribution checked.',
   'launcher_verified':True,
+  'animations_verified':True,
+  'paired_circuit_labels_verified':any('paired circuit labels' in c['name'] for c in browser['checks']),
   'production_javascript_sha256':hashlib.sha256((root/'dist'/next(a[2:] for a in assets if a.endswith('.js'))).read_bytes()).hexdigest(),
-  'revision':'presentation-context-and-top-ten-movement',
-  'scope':'Interactive opening, four analytical chapters with staged comparisons and race checkpoints, full-stage conclusion, Present/Explore modes, source/AI notes, records and exports. Historical association; no calibrated future-race forecast.',
+  'revision':'absolute-movement-and-race-control',
+  'scope':'F1 opening; pattern → combined recovery → paired circuit panels plus animated absolute movement → São Paulo with race playback, car markers and sourced race-control context → a concise three-use impact summary with fixed visual comparisons. Present/Explore, source/AI notes, records and exports. Historical association; no calibrated future-race forecast.',
 }
 (out/'release-validation.json').write_text(json.dumps(report,indent=2))
 archive=out/'F1_Dashboard_App.zip'
@@ -40,6 +45,9 @@ for file in sorted(root.rglob('*')):
     rel=file.relative_to(root)
     if any(p in ('node_modules','.git','__pycache__') for p in rel.parts):continue
     if file.name=='.DS_Store' or file.suffix in ('.tsbuildinfo','.pyc'):continue
+    if str(rel) in ('artifacts/movement-production-validation.json','artifacts/circuit-heading-validation.json','artifacts/movement-label-validation.json'):continue
+    if len(rel.parts)>1 and rel.parts[1]=='refinement':continue
+    if rel.parts[:2]==('artifacts','screenshots') and not re.fullmatch(r'(?:00-opening-reveal|intro|overview|overview-inspected|recovery-(?:top10|podium|win)|circuits-(?:field|both|movement)|case-(?:grid|11|33|43|69)|closing)-(?:1280|1440|390)\.png',file.name):continue
     files.append((file,'f1_dashboard/'+str(rel)))
 plan_files=[
   'README.md','source/explore_f1.py','source/unpack_snapshot.py','research/grid_overrides.json',
