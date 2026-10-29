@@ -10,6 +10,7 @@ units=json.loads((out/'unit-test-results.json').read_text())
 data=json.loads((out/'data-validation.json').read_text())
 launcher=json.loads((out/'launcher-validation.json').read_text())
 production=json.loads((out/'story-production-validation.json').read_text())
+opening=json.loads((out/'opening-validation.json').read_text())
 assert browser['passed'] and units['success'] and data['passed'] and launcher['passed'] and production['passed']
 assert json.loads((out/'animation-validation.json').read_text())['passed']
 assert units['numPassedTests']>=20
@@ -21,6 +22,7 @@ index=(root/'dist/index.html').read_text()
 assets=re.findall(r'(?:src|href)="(\./assets/[^"]+)"',index)
 assert assets and all((root/'dist'/a[2:]).exists() for a in assets)
 assert launcher['built_index_sha256']==hashlib.sha256((root/'dist/index.html').read_bytes()).hexdigest()
+assert opening['passed'] and opening['built_index_sha256']==launcher['built_index_sha256']
 report={
   'status':'built and verified locally',
   'build':'TypeScript type check and Vite production build passed',
@@ -32,6 +34,8 @@ report={
   'visual_review':'Desktop, projector, mobile and attributed chart-export images inspected; responsive sizing, labels and export background/attribution checked.',
   'launcher_verified':True,
   'animations_verified':True,
+  'opening_background_checks_passed':len(opening['checks']),
+  'opening_viewports':opening['viewports'],
   'paired_circuit_labels_verified':any('paired circuit labels' in c['name'] for c in browser['checks']),
   'production_javascript_sha256':hashlib.sha256((root/'dist'/next(a[2:] for a in assets if a.endswith('.js'))).read_bytes()).hexdigest(),
   'revision':'absolute-movement-and-race-control',

@@ -78,3 +78,8 @@ Condensed the closing into three fixed examples and one short use per audience. 
 ## Absolute movement and race-control context
 
 Restored the circuit Position change view with mean absolute grid-to-finish values, explicit finish counts and a short entry animation. Added a presentation step and view switch while retaining the paired correlation/pole panels. Added selected São Paulo VSC, safety-car, red-flag, restart and finish milestones from the frozen OpenF1 messages and FIA account. Plot shading clips to the revealed lap; a compact note follows the latest reached event, and playback briefly holds at those milestones. Preserved all rank traces, source corrections, outcome rates and the one-minute closing. Source-message laps are distinguished from narrative race laps in Methods and the speaking notes.
+
+
+## F1 opening backdrop
+
+Added original decorative circuit artwork with kerbs, pit markings, asphalt texture and a five-light starting gantry. A brief racing-line sweep and sequential light illumination run once on entry; the lights dim on reveal. Kept all opening text, estimate choices, numerical results, starting-grid illustration and analytical views. Decorative layers do not intercept input, and reduced motion keeps the evidence and controls available without animation. No external background assets or runtime requests were added.

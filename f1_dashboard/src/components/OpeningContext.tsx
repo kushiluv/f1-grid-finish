@@ -1,6 +1,7 @@
 import {percent,fmt} from '../data/metrics';
 import type {Summary} from '../data/types';
 import {Icon} from './Icon';
+import {OpeningBackdrop} from './OpeningBackdrop';
 
 function StartingGridIllustration(){
   return <div className="grid-illustration">
@@ -25,6 +26,7 @@ function StartingGridIllustration(){
 
 export function OpeningContext({stats,guess,revealed,onGuess,onReveal,onContinue,onSkip}:{stats:Summary;guess:number|null;revealed:boolean;onGuess:(n:number)=>void;onReveal:()=>void;onContinue:()=>void;onSkip:()=>void}){
   return <main id="main-content" className="opening-stage">
+    <OpeningBackdrop revealed={revealed}/>
     <section className="opening-art"><StartingGridIllustration/></section>
     <section className="opening-copy">
       <img className="opening-f1-logo" src={`${import.meta.env.BASE_URL}assets/f1-logo.svg`} alt="Formula 1" width="164" height="44"/><h1>How does starting position relate to <em>the finishing result?</em></h1>

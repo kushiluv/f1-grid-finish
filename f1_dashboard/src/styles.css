@@ -288,3 +288,29 @@ main{flex:1;padding:20px var(--gutter) 16px;display:flex;flex-direction:column;m
 @media(min-width:1100px) and (max-height:800px){.race-control-note{padding:8px 10px;margin:2px 0 8px}.race-control-note p{font-size:11px;line-height:1.35;margin:6px 0}.race-control-key{font-size:8px;gap:9px;padding-top:5px}.control-badge{font-size:9px;letter-spacing:.5px}.race-control-note small{font-size:8px}.chapter-case .race-position-list{margin-bottom:6px}.chapter-case .takeaway{padding-top:8px}.circuit-view-tabs .outcome-tabs button{padding:6px 12px;font-size:11px}.circuit-view-tabs{min-height:35px;padding:3px 12px 5px}}
 @media(max-width:760px){.race-control-note{margin:8px 0 12px;padding:13px}.race-control-note p{font-size:13px}.race-control-key{font-size:10px}.control-badge{font-size:10px}}
 @media(min-width:1100px) and (max-height:800px){.chapter-case .race-position-list>div{padding:7px 0}.chapter-case .race-control-note{margin-bottom:6px}.chapter-case .race-control-note p{margin:5px 0}}
+
+/* F1 opening environment: an original decorative circuit and start-light gantry. */
+.screen-intro{background:#0F171E}.screen-intro .topbar,.screen-intro .app-footer{background:#0F171E;border-color:#293940}
+.opening-stage{position:relative;isolation:isolate;overflow:hidden}
+.opening-backdrop{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:radial-gradient(ellipse at 18% 37%,#243A45 0,transparent 52%),radial-gradient(ellipse at 35% 82%,#552E282E 0,transparent 45%),#0F171E}
+.opening-backdrop:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0F171E05 0%,#0F171E18 26%,#0F171ED9 49%,#0F171EF5 64%,#0F171E 100%)}
+.opening-track-scene{position:absolute;inset:0;width:100%;height:100%;opacity:.95}
+.intro-track-trail{stroke-dasharray:65 2600;stroke-dashoffset:2300;animation:intro-track-pass 3.6s ease-out .35s both}
+.opening-art,.opening-copy{position:relative;z-index:1}.opening-art{background:radial-gradient(ellipse at 48% 50%,#14232BBA 0%,#14232B55 45%,transparent 72%)}
+.grid-illustration{filter:drop-shadow(0 12px 22px #0005)}
+.intro-start-gantry{position:absolute;left:11%;top:4%;display:flex;gap:7px;padding:8px 11px;z-index:1;transform:rotate(-3deg);background:#091116;border:1px solid #4D62684D;border-radius:5px;box-shadow:0 9px 25px #0005}
+.gantry-crossbar{position:absolute;left:-45px;right:-45px;top:19px;height:4px;background:#5B6E7438;z-index:-1}
+.gantry-pod{display:flex;flex-direction:column;gap:5px;padding:4px;background:#050A0D;border:1px solid #2A3439;border-radius:4px}
+.gantry-pod i{display:block;width:13px;height:13px;border-radius:50%;background:#381B1B;box-shadow:inset 0 1px 3px #0008;animation:intro-light-on .4s ease var(--light-delay) both;transition:filter .65s,opacity .65s}
+.lights-out .gantry-pod i{filter:brightness(.22) saturate(.35);opacity:.55}
+@keyframes intro-light-on{from{background:#381B1B;box-shadow:inset 0 1px 3px #0008}to{background:#F85D49;box-shadow:0 0 8px #F45B4970,inset 0 1px 2px #FFAB98}}
+@keyframes intro-track-pass{0%{stroke-dashoffset:2300;opacity:0}15%{opacity:.65}80%{opacity:.45}100%{stroke-dashoffset:-300;opacity:0}}
+@media(min-width:1600px){.opening-backdrop:before{content:'';position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,#0F171E,transparent 9%,transparent 90%,#0F171E)}}
+@media(min-width:1100px) and (max-height:800px){.intro-start-gantry{top:3%;left:13%;gap:6px;padding:6px 9px}.gantry-pod{gap:4px;padding:3px}.gantry-pod i{width:11px;height:11px}}
+@media(max-width:760px){
+ .intro-start-gantry{left:auto;right:22px;top:24px;gap:4px;padding:5px 7px;transform:none;opacity:.75}.gantry-pod{gap:3px;padding:2px}.gantry-pod i{width:7px;height:7px}.gantry-crossbar{left:-12px;right:-12px;top:13px;height:3px}
+ .opening-track-scene{inset:auto;left:-40%;bottom:0;width:160%;height:58%;opacity:.85}.opening-backdrop:after{background:linear-gradient(180deg,#0F171EEB 0%,#0F171EE0 44%,#0F171E30 66%,#0F171E40 100%)}
+ .opening-art{background:radial-gradient(ellipse at 50% 50%,#12232BBB 0,transparent 75%)}
+}
+@media(prefers-reduced-motion:reduce){.gantry-pod i{background:#F85D49;box-shadow:0 0 8px #F45B4970,inset 0 1px 2px #FFAB98}.intro-track-trail{opacity:0}}
+@media print{.opening-backdrop{display:none}}
