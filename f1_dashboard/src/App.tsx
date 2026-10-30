@@ -15,6 +15,7 @@ import {Methods} from './components/Methods';
 import {Records} from './components/Records';
 import {OpeningContext} from './components/OpeningContext';
 import {RaceControlNote} from './components/RaceControlNote';
+import {useRaceAudio} from './components/useRaceAudio';
 import Plotly from 'plotly.js-dist-min';
 
 const titles:Record<Chapter,{title:string;description:string;chart:string}>={
@@ -47,7 +48,7 @@ function Dashboard({bundle}:{bundle:Bundle}){
   const [cell,setCell]=useState<{start:number;finish:number|null}|null>(null);
   const [filters,setFilters]=useState(false),[circuitMenu,setCircuitMenu]=useState(false),[limited,setLimited]=useState(false),[selectedCircuit,setSelectedCircuit]=useState(()=>'monaco');
   const [notice,setNotice]=useState('');
-  const [playing,setPlaying]=useState(false),[playSpeed,setPlaySpeed]=useState(1);
+  const [playing,setPlaying]=useState(false),[playSpeed,setPlaySpeed]=useState(2);
   const present=s.mode==='present',intro=present&&story==='intro',closing=present&&story==='closing',analysis=!intro&&!closing;
   const base=useMemo(()=>selectBase(bundle.rows,s),[bundle.rows,s.years,s.circuitIds,s.cohortDriverId,s.cohortConstructorId,s.includeBelgium2021]);
   const stats=useMemo(()=>summarize(base),[base]);
@@ -76,6 +77,11 @@ function Dashboard({bundle}:{bundle:Bundle}){
   const scope=s.chapter==='case'?'São Paulo 2024 · fixed case study':`${s.years.join('–')} · ${!s.circuitIds.length?'All circuits':s.circuitIds.length===1?circuits.find(c=>c[0]===s.circuitIds[0])?.[1]:`${s.circuitIds.length} circuits`}${hasCohort?' · filtered cohort':''}`;
   const cellRows=cell?starts.filter(r=>r.grid===cell.start&&(cell.finish===null?!r.is_finisher:r.is_finisher&&r.finish===cell.finish)):[];
   const caseLap=s.caseLap??69;
+  const winningMoveLap=useMemo(()=>{
+    const points=bundle.raceCase.traces[0].points;
+    return points.find((point,i)=>i>0&&point.position===1&&points[i-1].position!==1)?.lap??43;
+  },[bundle.raceCase]);
+  const raceAudio=useRaceAudio({active:s.chapter==='case',lap:caseLap,playing,cueLap:winningMoveLap,finishLap:bundle.raceCase.laps,blocked:modal!==null});
   const caseEvent=bundle.raceCase.events.find(e=>e.lap===caseLap);
   const fullCircuitScope=s.years[0]===2014&&s.years[1]===2025&&!hasCohort&&!s.includeBelgium2021;
   const patch=(p:Partial<AppState>)=>setS(v=>({...v,...p}));
@@ -90,7 +96,7 @@ function Dashboard({bundle}:{bundle:Bundle}){
   function chooseCircuitMetric(metric:AppState['circuitMetric']){if(!present)patch({circuitMetric:metric});else if(metric==='movement')activate('circuits-movement');else if(movement)activate('circuits-both');}
   function setRaceLap(lap:number){if(present){const cp=[...CHECKPOINTS].reverse().find(n=>n<=lap)??0;setStory(cp===0?'case-grid':`case-${cp}` as StoryStep);}patch({caseLap:lap,caseEvent:null});}
   function inspectLap(lap:number){setPlaying(false);setRaceLap(lap);}
-  function togglePlayback(){if(playing){setPlaying(false);return;}if(caseLap>=69)setRaceLap(0);setPlaying(true);}
+  function togglePlayback(){if(playing){setPlaying(false);return;}raceAudio.prepare();if(caseLap>=69)setRaceLap(0);setPlaying(true);}
   useEffect(()=>{
     if(!playing)return;
     if(s.chapter!=='case'||modal||caseLap>=69){setPlaying(false);return;}
@@ -152,7 +158,7 @@ function Dashboard({bundle}:{bundle:Bundle}){
           {s.chapter==='recovery'&&<RecoveryBars rows={base} outcome={s.outcome} selectedBand={s.selectedBand} revealThrough={recoveryReveal} onSelect={(selectedBand,outcome)=>{if(recoveryVisible(outcome))patch({selectedBand,outcome});}}/>}
           {s.chapter==='case'&&<RaceTrace race={bundle.raceCase} showGasly={s.showGasly} lap={s.caseLap} reveal={present||s.caseLap!==null} onLap={inspectLap}/>}
         </div>
-        {s.chapter==='case'&&<><div className="event-rail" role="group" aria-label="Race checkpoints">{CHECKPOINTS.map((lap,i)=><button key={lap} aria-pressed={caseLap===lap} onClick={()=>inspectLap(lap)}><span>{lap===0?'START':`LAP ${lap}`}</span><b>{CHECKPOINT_NAMES[i]}</b></button>)}</div><div className="lap-control race-playback"><button className="play-button" onClick={togglePlayback} aria-label={playing?'Pause race':'Play race'}><Icon name={playing?'pause':'play'} size={16}/>{playing?'Pause':'Play race'}</button><select aria-label="Playback speed" value={playSpeed} onChange={e=>setPlaySpeed(Number(e.target.value))}><option value={1}>1×</option><option value={2}>2×</option></select><label htmlFor="lap-scrubber">{caseLap===0?'Starting grid':`Lap ${caseLap} / 69`}</label><input id="lap-scrubber" type="range" min="0" max="69" value={s.caseLap??69} onChange={e=>inspectLap(Number(e.target.value))}/><button onClick={()=>{setPlaying(false);present?activate('case-69'):patch({caseLap:null,caseEvent:null});}}>Show full race</button><button aria-label="Replay race from the grid" onClick={()=>inspectLap(0)}><Icon name="reset" size={16}/></button></div></>}
+        {s.chapter==='case'&&<><audio ref={raceAudio.audioRef} src={`${import.meta.env.BASE_URL}assets/verstappen-celebration.mp3`} preload="auto" muted={raceAudio.muted} hidden/><div className="event-rail" role="group" aria-label="Race checkpoints">{CHECKPOINTS.map((lap,i)=><button key={lap} aria-pressed={caseLap===lap} onClick={()=>inspectLap(lap)}><span>{lap===0?'START':`LAP ${lap}`}</span><b>{CHECKPOINT_NAMES[i]}</b></button>)}</div><div className="lap-control race-playback"><button className="play-button" onClick={togglePlayback} aria-label={playing?'Pause race':'Play race'}><Icon name={playing?'pause':'play'} size={16}/>{playing?'Pause':'Play race'}</button><select aria-label="Playback speed" value={playSpeed} onChange={e=>setPlaySpeed(Number(e.target.value))}><option value={1}>1×</option><option value={2}>2×</option></select><button className="race-mute" aria-label={raceAudio.muted?'Unmute race audio':'Mute race audio'} aria-pressed={raceAudio.muted} onClick={raceAudio.toggleMuted}><Icon name={raceAudio.muted?'muted':'sound'} size={16}/>{raceAudio.muted?'Muted':'Sound on'}</button><label htmlFor="lap-scrubber">{caseLap===0?'Starting grid':`Lap ${caseLap} / 69`}</label><input id="lap-scrubber" type="range" min="0" max="69" value={s.caseLap??69} onChange={e=>inspectLap(Number(e.target.value))}/><button onClick={()=>{setPlaying(false);present?activate('case-69'):patch({caseLap:null,caseEvent:null});}}>Show full race</button><button aria-label="Replay race from the grid" onClick={()=>inspectLap(0)}><Icon name="reset" size={16}/></button></div></>}
         {!(present&&s.chapter==='case')&&<div className="chart-caption">{s.chapter==='overview'?`Each column totals 100% including DNF/DSQ (did not finish / disqualified). Correlation uses ${fmt(stats.finishers)} finishers.`:s.chapter==='circuits'&&movement?'Mean absolute grid–finish difference among P1–10 starters who finished. Larger = more movement in either direction; not an overtake count.':s.chapter==='circuits'?`Correlation uses finishers; pole-win rates use actual P1 starts. Capped lines show 95% intervals when available. ${present?'Five contrasts from 19 circuits with at least eight races.':'Limited histories can be included above.'}`:s.chapter==='recovery'?'One shared 0–100% scale. A win is also a podium and a top-ten result; do not add the rates. Every eligible start counts, including retirements.':'Observed lap-end positions. Net places gained do not count on-track overtakes.'}</div>}
       </article>
       <aside className={`insight-panel ${s.chapter==='overview'&&s.selectedStart!==null?'is-inspecting':''}`} aria-label="Interpretation and selected details"><div className="insight-heading"><span className="section-kicker">{s.chapter==='case'?(caseLap===0?'AT THE START':caseLap===69?'AT THE FINISH':`END OF LAP ${caseLap}`):'WHAT TO NOTICE'}</span><span>0{index+1}</span></div>

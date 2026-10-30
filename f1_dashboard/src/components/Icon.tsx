@@ -2,6 +2,8 @@ export function Icon({name,size=18}:{name:string;size?:number}) {
   const paths:Record<string,React.ReactNode>={
     play:<path d="m8 4 12 8-12 8Z" fill="currentColor"/>,
     pause:<><path d="M7 4h3v16H7zM15 4h3v16h-3z" fill="currentColor"/></>,
+    sound:<><path d="M4 9h4l5-4v14l-5-4H4zM17 8a6 6 0 0 1 0 8M20 5a10 10 0 0 1 0 14"/></>,
+    muted:<><path d="M4 9h4l5-4v14l-5-4H4zM17 9l5 6M22 9l-5 6"/></>,
     arrow:<><path d="M4 12h15M13 5l7 7-7 7"/></>,
     chevron:<path d="m9 5 7 7-7 7"/>,
     down:<path d="m6 9 6 6 6-6"/>,

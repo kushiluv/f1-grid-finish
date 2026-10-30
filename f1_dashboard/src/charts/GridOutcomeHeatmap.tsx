@@ -3,12 +3,28 @@ import type {Data, Layout, PlotMouseEvent} from 'plotly.js';
 import type {DriverRace} from '../data/types';
 import {heatmap} from '../data/metrics';
 import {Plot,baseLayout,config,TEAL,AMBER,SHARE_COLORS,EmptyChart,useCompactChart} from './Plot';
+import {fadeIn,useChartReveal,type RevealPart} from './useChartReveal';
+
+type HeatmapLens='all'|'gained'|'same'|'lost';
 
 export function GridOutcomeHeatmap({rows,selectedStart,highlightedDriverId,onSelect}:{rows:DriverRace[];selectedStart:number|null;highlightedDriverId:string;onSelect:(start:number,finish:number|null)=>void}) {
   const m=useMemo(()=>heatmap(rows),[rows]);
   const compact=useCompactChart();
-  const [lens,setLens]=useState<'all'|'gained'|'same'|'lost'>('all');
-  const visible=(start:number,finish:number)=>lens==='all'||(lens==='gained'?finish<start:lens==='same'?finish===start:finish>start);
+  const [lens,setLens]=useState<HeatmapLens>('all');
+  const [preview,setPreview]=useState<HeatmapLens|null>(null);
+  const activeLens=preview??lens;
+  const {root,afterPlot}=useChartReveal(activeLens,container=>{
+    const parts:RevealPart[]=[];
+    const heatmaps=container.querySelectorAll('.xy .heatmaplayer .hm');
+    if(activeLens==='all'){
+      parts.push({element:heatmaps[0]??null,frames:[{opacity:.3,clipPath:'inset(0 0 100% 0)'},{opacity:1,clipPath:'inset(0 0 0% 0)'}],duration:550});
+    }else{
+      parts.push({element:heatmaps[1]??null,frames:fadeIn,duration:360});
+      parts.push({element:container.querySelector('.shapelayer path[data-index="0"]'),frames:[{opacity:.25},{opacity:1}],duration:460});
+    }
+    return parts;
+  },true);
+  const visible=(start:number,finish:number)=>activeLens==='all'||(activeLens==='gained'?finish<start:activeLens==='same'?finish===start:finish>start);
   const shown=m.counts.slice(0,22).reduce((n,row,y)=>n+row.reduce((sum,k,x)=>sum+(visible(x+1,y+1)?k:0),0),0);
   const total=m.denoms.reduce((a,b)=>a+b,0);
   if(!m.denoms.some(Boolean))return <EmptyChart/>;
@@ -27,7 +43,7 @@ export function GridOutcomeHeatmap({rows,selectedStart,highlightedDriverId,onSel
     customdata:[m.counts[22].map((k,i)=>[k,m.denoms[i]])] as any,
     hovertemplate:'Started P%{x} → did not finish / DSQ<br><b>%{z:.1%}</b> · %{customdata[0]} of %{customdata[1]} starts<extra></extra>',hoverongaps:false,
   }];
-  if(lens!=='all')data.push({type:'heatmap',x,y:x,z:x.map(finish=>x.map(start=>visible(start,finish)?null:1)),colorscale:[[0,'#F6F7F5'],[1,'#F6F7F5']],showscale:false,hoverinfo:'skip',hoverongaps:false,xgap:1.5,ygap:1.5,opacity:.94});
+  if(activeLens!=='all')data.push({type:'heatmap',x,y:x,z:x.map(finish=>x.map(start=>visible(start,finish)?null:1)),colorscale:[[0,'#F6F7F5'],[1,'#F6F7F5']],showscale:false,hoverinfo:'skip',hoverongaps:false,xgap:1.5,ygap:1.5,opacity:.94});
   if(selectedStart){const col=selectedStart-1;const ys=x.filter(y=>visible(selectedStart,y)&&(m.values[y-1][col]??0)>=.035);data.push({type:'scatter',mode:'text',x:ys.map(()=>selectedStart),y:ys,text:ys.map(y=>`${Math.round(m.values[y-1][col]!*100)}%`),textfont:{size:compact?7:9,color:ys.map(y=>m.values[y-1][col]!>=.25?'#fff':'#183F46')},hoverinfo:'skip'});}
   if(highlightedDriverId){
     const rs=rows.filter(r=>r.driver_id===highlightedDriverId&&r.grid&&r.is_finisher&&r.finish);
@@ -48,5 +64,5 @@ export function GridOutcomeHeatmap({rows,selectedStart,highlightedDriverId,onSel
     (data[0] as any).colorbar={tickvals:[0,.5,1],ticktext:['0%','50%','100%'],thickness:7,len:.8,y:.6,outlinewidth:0,tickfont:{size:9}};
   }
   const click=(e:PlotMouseEvent)=>{const p=e.points[0];if(p&&typeof p.x==='number')onSelect(p.x,p.curveNumber===1?null:Number(p.y));};
-  return <div className="heatmap-explorer"><div className="heatmap-lenses" role="group" aria-label="Highlight position changes">{(['all','gained','same','lost'] as const).map(l=><button key={l} aria-pressed={lens===l} onClick={()=>setLens(l)}>{({all:'All finishes',gained:'↗ Gained places',same:'Same position',lost:'↙ Lost places'})[l]}</button>)}</div><Plot className="plot" data={data} layout={layout} config={config} useResizeHandler style={{width:'100%',flex:1,minHeight:0}} onClick={click}/><div className="heatmap-focus-note" role="status">{lens==='all'?'Above diagonal = gains · below = losses. Darker cells = more frequent outcomes.':`${shown.toLocaleString()} of ${total.toLocaleString()} starts ${lens==='same'?'finished in the same place':lens==='gained'?'gained places':'lost places'}. Faded cells remain in the denominator.`}</div></div>;
+  return <div ref={root} className="heatmap-explorer" data-lens={activeLens} data-preview={preview!==null}><div className="heatmap-lenses" role="group" aria-label="Highlight position changes">{(['all','gained','same','lost'] as const).map(l=><button key={l} type="button" aria-pressed={lens===l} data-preview={preview===l} title={l==='all'?'Show all outcomes':'Hover or focus to preview; click to keep this focus. Click again to show all.'} onPointerEnter={e=>{if(e.pointerType==='mouse')setPreview(l);}} onPointerLeave={()=>setPreview(null)} onFocus={()=>setPreview(l)} onBlur={()=>setPreview(null)} onClick={()=>{setPreview(null);setLens(current=>current===l?'all':l);}}>{({all:'All finishes',gained:'↗ Gained places',same:'Same position',lost:'↙ Lost places'})[l]}</button>)}</div><Plot className="plot" data={data} layout={layout} config={config} useResizeHandler style={{width:'100%',flex:1,minHeight:0}} onInitialized={afterPlot} onUpdate={afterPlot} onClick={click}/><div className="heatmap-focus-note" role="status">{preview!==null&&preview!==lens?'Preview · ':''}{activeLens==='all'?'Above diagonal = gains · below = losses. Darker cells = more frequent outcomes.':`${shown.toLocaleString()} of ${total.toLocaleString()} starts ${activeLens==='same'?'finished in the same place':activeLens==='gained'?'gained places':'lost places'}. Faded cells remain in the denominator.`}</div></div>;
 }
